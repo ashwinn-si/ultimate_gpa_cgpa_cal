@@ -5,14 +5,13 @@ export const DEFAULT_GRADE_SYSTEM = '10-point'
 
 export const GRADE_SYSTEMS = {
   '10-point': [
-    { name: 'A+', points: 10, order: 0 },
-    { name: 'A', points: 9, order: 1 },
-    { name: 'B+', points: 8, order: 2 },
-    { name: 'B', points: 7, order: 3 },
-    { name: 'C+', points: 6, order: 4 },
-    { name: 'C', points: 5, order: 5 },
-    { name: 'D', points: 4, order: 6 },
-    { name: 'F', points: 0, order: 7 },
+    { name: 'O', points: 10, order: 0 },
+    { name: 'A+', points: 9, order: 1 },
+    { name: 'B', points: 8, order: 2 },
+    { name: 'B+', points: 7, order: 3 },
+    { name: 'C', points: 6, order: 4 },
+    { name: 'C+', points: 5, order: 5 },
+    { name: 'U', points: 0, order: 6 },
   ],
   '4-point': [
     { name: 'A', points: 4.0, order: 0 },
