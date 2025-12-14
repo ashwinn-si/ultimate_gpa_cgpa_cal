@@ -7,11 +7,12 @@ export const GRADE_SYSTEMS = {
   '10-point': [
     { name: 'O', points: 10, order: 0 },
     { name: 'A+', points: 9, order: 1 },
-    { name: 'B', points: 8, order: 2 },
-    { name: 'B+', points: 7, order: 3 },
-    { name: 'C', points: 6, order: 4 },
-    { name: 'C+', points: 5, order: 5 },
-    { name: 'U', points: 0, order: 6 },
+    { name: 'A', points: 8, order: 2 },
+    { name: 'B+', points: 8, order: 3 },
+    { name: 'B', points: 7, order: 4 },
+    { name: 'C+', points: 6, order: 5 },
+    { name: 'C', points: 5, order: 6 },
+    { name: 'U', points: 0, order: 7 },
   ],
   '4-point': [
     { name: 'A', points: 4.0, order: 0 },
