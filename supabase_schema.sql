@@ -5,53 +5,69 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Semesters table
-CREATE TABLE semesters (
+CREATE TABLE IF NOT EXISTS semesters (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
-    year INTEGER NOT NULL,
-    term VARCHAR(20),
-    gpa DECIMAL(4, 2) DEFAULT 0,
-    total_credits DECIMAL(5, 1) DEFAULT 0,
+    year INTEGER NOT NULL CHECK (year >= 2000 AND year <= 2100),
+    term VARCHAR(20) CHECK (term IN ('fall', 'spring', 'summer', 'winter', NULL)),
+    gpa DECIMAL(4, 2) DEFAULT 0 CHECK (gpa >= 0 AND gpa <= 10),
+    total_credits DECIMAL(5, 1) DEFAULT 0 CHECK (total_credits >= 0),
     "order" INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
+COMMENT ON TABLE semesters IS 'Stores academic semester information for each user';
+COMMENT ON COLUMN semesters.gpa IS 'Calculated GPA for the semester (0-10 scale)';
+COMMENT ON COLUMN semesters.total_credits IS 'Total credits accumulated in this semester';
+COMMENT ON COLUMN semesters.order IS 'Display order for sorting semesters';
+
 -- Subjects table
-CREATE TABLE subjects (
+CREATE TABLE IF NOT EXISTS subjects (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     semester_id UUID NOT NULL REFERENCES semesters(id) ON DELETE CASCADE,
     name VARCHAR(100) NOT NULL,
     grade VARCHAR(10) NOT NULL,
-    grade_points DECIMAL(4, 2) NOT NULL,
-    credits DECIMAL(4, 1) NOT NULL,
+    grade_points DECIMAL(4, 2) NOT NULL CHECK (grade_points >= 0 AND grade_points <= 10),
+    credits DECIMAL(4, 1) NOT NULL CHECK (credits >= 0.5 AND credits <= 10 AND MOD(credits::numeric * 2, 1) = 0),
     "order" INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
+COMMENT ON TABLE subjects IS 'Stores subject/course information for each semester';
+COMMENT ON COLUMN subjects.grade_points IS 'Grade points for the subject (0-10 scale)';
+COMMENT ON COLUMN subjects.credits IS 'Credit hours for the subject (0.5-10 in 0.5 increments)';
+
 -- Grade configurations table
-CREATE TABLE grade_configs (
+CREATE TABLE IF NOT EXISTS grade_configs (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     name VARCHAR(10) NOT NULL,
-    points DECIMAL(4, 2) NOT NULL,
+    points DECIMAL(4, 2) NOT NULL CHECK (points >= 0 AND points <= 10),
     description VARCHAR(100),
-    min_percentage DECIMAL(5, 2),
-    max_percentage DECIMAL(5, 2),
+    min_percentage DECIMAL(5, 2) CHECK (min_percentage >= 0 AND min_percentage <= 100),
+    max_percentage DECIMAL(5, 2) CHECK (max_percentage >= 0 AND max_percentage <= 100 AND max_percentage >= min_percentage),
     "order" INTEGER DEFAULT 0,
     is_default BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    CONSTRAINT unique_grade_per_user UNIQUE (user_id, name)
+);
+
+COMMENT ON TAIF NOT EXISTS user_settings (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
+    theme VARCHAR(10) DEFAULT 'auto' CHECK (theme IN ('light', 'dark', 'auto')),
+    default_grading_system VARCHAR(20) DEFAULT '10-point',
+    decimal_precision INTEGER DEFAULT 2 CHECK (decimal_precision >= 0 AND decimal_precision <= 4),
+    include_failed_courses BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
--- User settings table
-CREATE TABLE user_settings (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
-    theme VARCHAR(10) DEFAULT 'auto',
-    default_grading_system VARCHAR(20) DEFAULT '10-point',
+COMMENT ON TABLE user_settings IS 'User-specific application settings and preferences'   default_grading_system VARCHAR(20) DEFAULT '10-point',
     decimal_precision INTEGER DEFAULT 2,
     include_failed_courses BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
@@ -164,5 +180,79 @@ CREATE TRIGGER update_subjects_updated_at BEFORE UPDATE ON subjects
 CREATE TRIGGER update_grade_configs_updated_at BEFORE UPDATE ON grade_configs
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_user_settings_updated_at BEFORE UPDATE ON user_settings
+-- Helper function to calculate CGPA across all semesters for a user
+CREATE OR REPLACE FUNCTION calculate_user_cgpa(p_user_id UUID)
+RETURNS DECIMAL(4, 2) AS $$
+DECLARE
+    v_total_grade_points DECIMAL(10, 2) := 0;
+    v_total_credits DECIMAL(10, 2) := 0;
+    v_cgpa DECIMAL(4, 2);
+BEGIN
+    SELECT 
+        COALESCE(SUM(sub.grade_points * sub.credits), 0),
+        COALESCE(SUM(sub.credits), 0)
+    INTO v_total_grade_points, v_total_credits
+    FROM subjects sub
+    INNER JOIN semesters sem ON sub.semester_id = sem.id
+    WHERE sem.user_id = p_user_id;
+    
+    IF v_total_credits = 0 THEN
+        RETURN 0;
+    END IF;
+    
+    v_cgpa := v_total_grade_points / v_total_credits;
+    RETURN ROUND(v_cgpa, 2);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON FUNCTION calculate_user_cgpa IS 'Calculates overall CGPA for a user across all semesters';
+
+-- Helper function to get semester statistics
+CREATE OR REPLACE FUNCTION get_semester_stats(p_semester_id UUID)
+RETURNS TABLE (
+    gpa DECIMAL(4, 2),
+    total_credits DECIMAL(5, 1),
+    subject_count INTEGER,
+    average_grade_points DECIMAL(4, 2)
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        CASE 
+            WHEN COALESCE(SUM(s.credits), 0) = 0 THEN 0
+            ELSE ROUND(COALESCE(SUM(s.grade_points * s.credits), 0) / COALESCE(SUM(s.credits), 1), 2)
+        END AS gpa,
+        COALESCE(SUM(s.credits), 0)::DECIMAL(5, 1) AS total_credits,
+        COUNT(*)::INTEGER AS subject_count,
+        COALESCE(AVG(s.grade_points), 0)::DECIMAL(4, 2) AS average_grade_points
+    FROM subjects s
+    WHERE s.semester_id = p_semester_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+COMMENT ON FUNCTION get_semester_stats IS 'Returns calculated statistics for a semester';
+
+-- View for user dashboard statistics
+CREATE OR REPLACE VIEW user_dashboard_stats AS
+SELECT 
+    sem.user_id,
+    COUNT(DISTINCT sem.id) as total_semesters,
+    COUNT(sub.id) as total_subjects,
+    COALESCE(SUM(sub.credits), 0) as total_credits_earned,
+    CASE 
+        WHEN COALESCE(SUM(sub.credits), 0) = 0 THEN 0
+        ELSE ROUND(COALESCE(SUM(sub.grade_points * sub.credits), 0) / COALESCE(SUM(sub.credits), 1), 2)
+    END as overall_cgpa
+FROM semesters sem
+LEFT JOIN subjects sub ON sub.semester_id = sem.id
+GROUP BY sem.user_id;
+
+COMMENT ON VIEW user_dashboard_stats IS 'Aggregated statistics for user dashboard';
+
+-- Grant permissions on the view
+GRANT SELECT ON user_dashboard_stats TO authenticated;
+
+-- Create RLS policy for the view
+CREATE POLICY "Users can view their own stats" ON user_dashboard_stats
+    FOR SELECT USING (auth.uid() = user_id);CREATE TRIGGER update_user_settings_updated_at BEFORE UPDATE ON user_settings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

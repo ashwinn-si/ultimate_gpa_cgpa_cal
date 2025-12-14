@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, TrendingUp, BookOpen, Award } from 'lucide-react'
+import { Plus, TrendingUp, BookOpen, Award, Target } from 'lucide-react'
 import Link from 'next/link'
 import { calculateCGPA } from '@/lib/utils/calculations'
 
@@ -15,8 +15,30 @@ export default async function DashboardPage() {
     .order('order', { ascending: true })
 
   const allSemesters = semesters || []
-  const cgpa = calculateCGPA(allSemesters as any)
-  const totalCredits = allSemesters.reduce((sum, sem) => sum + sem.total_credits, 0)
+
+  // Calculate total credits and credit scored
+  let totalCredits = 0
+  let totalCreditScored = 0
+
+  for (const semester of allSemesters) {
+    if (semester.subjects && semester.subjects.length > 0) {
+      for (const subject of semester.subjects) {
+        const gradePoints = subject.grade_points ?? 0
+        const credits = subject.credits ?? 0
+
+        // Total credit = credits × 10 (max possible)
+        totalCredits += credits * 10
+        // Credit scored = grade_points × credits
+        totalCreditScored += gradePoints * credits
+      }
+    }
+  }
+
+  // CGPA = (Credit Scored / Total Credit) × 10
+  const cgpa = totalCredits > 0 ? (totalCreditScored / totalCredits) * 10 : 0
+
+  totalCredits = parseFloat(totalCredits.toFixed(2))
+  totalCreditScored = parseFloat(totalCreditScored.toFixed(2))
 
   return (
     <div className="space-y-6">
@@ -44,7 +66,7 @@ export default async function DashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">{cgpa.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
-              Out of 10.00
+              {totalCreditScored.toFixed(1)} ÷ {totalCredits.toFixed(1)}
             </p>
           </CardContent>
         </Card>
@@ -55,9 +77,22 @@ export default async function DashboardPage() {
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalCredits}</div>
+            <div className="text-2xl font-bold">{totalCredits.toFixed(1)}</div>
             <p className="text-xs text-muted-foreground">
-              Credits completed
+              Credits × 10 (max possible)
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Credit Scored</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalCreditScored.toFixed(2)}</div>
+            <p className="text-xs text-muted-foreground">
+              Grade points × credits
             </p>
           </CardContent>
         </Card>
@@ -71,21 +106,6 @@ export default async function DashboardPage() {
             <div className="text-2xl font-bold">{allSemesters.length}</div>
             <p className="text-xs text-muted-foreground">
               Total semesters
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Performance</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {cgpa >= 8.5 ? 'Excellent' : cgpa >= 7 ? 'Good' : cgpa >= 6 ? 'Average' : 'Below Average'}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Current standing
             </p>
           </CardContent>
         </Card>

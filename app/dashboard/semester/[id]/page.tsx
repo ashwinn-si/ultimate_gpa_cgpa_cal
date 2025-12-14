@@ -1,10 +1,13 @@
 import { getSemesterById } from '@/app/actions/semesters'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { TrendingUp, BookOpen, Award, ArrowLeft } from 'lucide-react'
+import { TrendingUp, BookOpen, Award, ArrowLeft, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { calculateSemesterGPA } from '@/lib/utils/calculations'
 import { AddSubjectButton } from '@/components/subject/AddSubjectButton'
+import { EditSubjectButton } from '@/components/subject/EditSubjectButton'
+import { DeleteSubjectButton } from '@/components/subject/DeleteSubjectButton'
+import { DeleteSemesterButton } from '@/components/semester/DeleteSemesterButton'
 
 interface SemesterDetailPageProps {
   params: Promise<{
@@ -33,7 +36,17 @@ export default async function SemesterDetailPage({ params }: SemesterDetailPageP
 
   const subjects = semester.subjects || []
   const gpa = calculateSemesterGPA(subjects)
-  const totalCredits = subjects.reduce((sum, s) => sum + (s.credits ?? 0), 0)
+
+  // Calculate total credits and credit scored
+  let totalCredits = 0
+  let creditScored = 0
+
+  for (const subject of subjects) {
+    const gradePoints = subject.grade_points ?? 0
+    const credits = subject.credits ?? 0
+    totalCredits += credits * 10  // Total credit = credits × 10
+    creditScored += gradePoints * credits  // Credit scored = grade_points × credits
+  }
 
   return (
     <div className="space-y-6">
@@ -49,7 +62,15 @@ export default async function SemesterDetailPage({ params }: SemesterDetailPageP
             {semester.year} {semester.term && `• ${semester.term}`}
           </p>
         </div>
-        <AddSubjectButton semesterId={id} />
+        <div className="flex items-center gap-2">
+          <DeleteSemesterButton
+            semesterId={id}
+            semesterName={semester.name}
+            subjectCount={subjects.length}
+            variant="outline"
+          />
+          <AddSubjectButton semesterId={id} />
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -62,7 +83,7 @@ export default async function SemesterDetailPage({ params }: SemesterDetailPageP
           <CardContent>
             <div className="text-2xl font-bold">{gpa.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
-              Out of 10.00
+              {creditScored.toFixed(1)} ÷ {totalCredits.toFixed(1)}
             </p>
           </CardContent>
         </Card>
@@ -75,24 +96,20 @@ export default async function SemesterDetailPage({ params }: SemesterDetailPageP
           <CardContent>
             <div className="text-2xl font-bold">{totalCredits.toFixed(1)}</div>
             <p className="text-xs text-muted-foreground">
-              {subjects.length} subjects
+              {subjects.length} subjects × 10
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Average Grade</CardTitle>
+            <CardTitle className="text-sm font-medium">Credit Scored</CardTitle>
             <Award className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {subjects.length > 0
-                ? (subjects.reduce((sum, s) => sum + s.grade_points, 0) / subjects.length).toFixed(2)
-                : '0.00'}
-            </div>
+            <div className="text-2xl font-bold">{creditScored.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">
-              Grade points
+              Grade points × credits
             </p>
           </CardContent>
         </Card>
@@ -141,8 +158,19 @@ export default async function SemesterDetailPage({ params }: SemesterDetailPageP
                       <td className="py-3 px-4">{subject.grade_points.toFixed(2)}</td>
                       <td className="py-3 px-4">{subject.credits.toFixed(1)}</td>
                       <td className="py-3 px-4 text-right">
-                        <Button variant="ghost" size="sm">Edit</Button>
-                        <Button variant="ghost" size="sm" className="text-destructive">Delete</Button>
+                        <EditSubjectButton
+                          subjectId={subject.id}
+                          semesterId={id}
+                          currentName={subject.name}
+                          currentGrade={subject.grade}
+                          currentGradePoints={subject.grade_points}
+                          currentCredits={subject.credits}
+                        />
+                        <DeleteSubjectButton
+                          subjectId={subject.id}
+                          semesterId={id}
+                          subjectName={subject.name}
+                        />
                       </td>
                     </tr>
                   ))}

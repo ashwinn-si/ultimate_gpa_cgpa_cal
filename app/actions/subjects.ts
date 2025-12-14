@@ -82,9 +82,16 @@ export async function updateSubject(
 ) {
   const supabase = await createClient()
 
+  // Map camelCase to snake_case for database
+  const updateData: any = {}
+  if (formData.name !== undefined) updateData.name = formData.name
+  if (formData.grade !== undefined) updateData.grade = formData.grade
+  if (formData.gradePoints !== undefined) updateData.grade_points = formData.gradePoints
+  if (formData.credits !== undefined) updateData.credits = formData.credits
+
   const { data, error } = await supabase
     .from('subjects')
-    .update(formData)
+    .update(updateData)
     .eq('id', id)
     .select()
     .single()

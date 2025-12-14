@@ -1,50 +1,63 @@
 import type { Subject, Semester } from '@/types'
 
 /**
- * Calculate semester GPA using weighted average
- * Formula: GPA = Σ(Grade Points × Credits) / Σ(Credits)
+ * Calculate semester GPA
+ * Formula: GPA = (Σ(Grade Points × Credits) / Σ(Credits × 10)) × 10
+ * Where Credits × 10 is the maximum possible credit for each subject
  */
 export function calculateSemesterGPA(subjects: any[]): number {
   if (subjects.length === 0) return 0
 
-  let totalGradePoints = 0
-  let totalCredits = 0
+  let creditScored = 0
+  let totalCredit = 0
 
   for (const subject of subjects) {
     const gradePoints = subject.grade_points ?? subject.gradePoints ?? 0
     const credits = subject.credits ?? 0
-    totalGradePoints += gradePoints * credits
-    totalCredits += credits
+    
+    // Credit scored = grade_points × credits
+    creditScored += gradePoints * credits
+    // Total credit = credits × 10 (max possible)
+    totalCredit += credits * 10
   }
 
-  if (totalCredits === 0) return 0
+  if (totalCredit === 0) return 0
 
-  const gpa = totalGradePoints / totalCredits
+  // GPA = (Credit Scored / Total Credit) × 10
+  const gpa = (creditScored / totalCredit) * 10
   return parseFloat(gpa.toFixed(2))
 }
 
 /**
  * Calculate overall CGPA across all semesters
- * Formula: CGPA = Σ(All Grade Points × Credits) / Σ(All Credits)
+ * Formula: CGPA = (Σ(Grade Points × Credits) / Σ(Credits × 10)) × 10
+ * Where Credits × 10 is the maximum possible credit for each subject
  */
 export function calculateCGPA(semesters: Semester[]): number {
   if (semesters.length === 0) return 0
 
-  let totalGradePoints = 0
-  let totalCredits = 0
+  let creditScored = 0
+  let totalCredit = 0
 
   for (const semester of semesters) {
     if (!semester.subjects || semester.subjects.length === 0) continue
 
     for (const subject of semester.subjects) {
-      totalGradePoints += subject.gradePoints * subject.credits
-      totalCredits += subject.credits
+      // Support both camelCase and snake_case
+      const gradePoints = subject.grade_points ?? (subject as any).gradePoints ?? 0
+      const credits = subject.credits ?? 0
+      
+      // Credit scored = grade_points × credits
+      creditScored += gradePoints * credits
+      // Total credit = credits × 10 (max possible)
+      totalCredit += credits * 10
     }
   }
 
-  if (totalCredits === 0) return 0
+  if (totalCredit === 0) return 0
 
-  const cgpa = totalGradePoints / totalCredits
+  // CGPA = (Credit Scored / Total Credit) × 10
+  const cgpa = (creditScored / totalCredit) * 10
   return parseFloat(cgpa.toFixed(2))
 }
 
@@ -112,7 +125,11 @@ export function calculateGradeDistribution(subjects: Subject[]) {
  */
 export function getTopSubjects(subjects: Subject[], limit: number = 5): Subject[] {
   return [...subjects]
-    .sort((a, b) => b.gradePoints - a.gradePoints)
+    .sort((a, b) => {
+      const aPoints = a.grade_points ?? (a as any).gradePoints ?? 0
+      const bPoints = b.grade_points ?? (b as any).gradePoints ?? 0
+      return bPoints - aPoints
+    })
     .slice(0, limit)
 }
 
@@ -121,6 +138,10 @@ export function getTopSubjects(subjects: Subject[], limit: number = 5): Subject[
  */
 export function getBottomSubjects(subjects: Subject[], limit: number = 5): Subject[] {
   return [...subjects]
-    .sort((a, b) => a.gradePoints - b.gradePoints)
+    .sort((a, b) => {
+      const aPoints = a.grade_points ?? (a as any).gradePoints ?? 0
+      const bPoints = b.grade_points ?? (b as any).gradePoints ?? 0
+      return aPoints - bPoints
+    })
     .slice(0, limit)
 }

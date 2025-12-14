@@ -43,7 +43,10 @@ export default function Sidebar() {
 
       <nav className="flex-1 p-4 space-y-2">
         {routes.map((route) => {
-          const isActive = pathname === route.href || pathname?.startsWith(route.href + '/')
+          // For dashboard, only match exact path. For others, match path and subpaths
+          const isActive = route.href === '/dashboard'
+            ? pathname === route.href
+            : pathname === route.href || pathname?.startsWith(route.href + '/')
 
           return (
             <Link key={route.href} href={route.href}>

@@ -119,8 +119,9 @@ export async function deleteSemester(id: string) {
 
   if (error) throw new Error(error.message)
 
-  revalidatePath('/')
-  revalidatePath('/semesters')
+  revalidatePath('/dashboard')
+  revalidatePath('/dashboard/semesters')
+  revalidatePath(`/dashboard/semester/${id}`)
 }
 
 export async function recalculateSemesterGPA(semesterId: string) {

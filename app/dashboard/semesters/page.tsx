@@ -1,8 +1,9 @@
 import { getSemesters } from '@/app/actions/semesters'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus, Pencil } from 'lucide-react'
 import Link from 'next/link'
+import { DeleteSemesterButton } from '@/components/semester/DeleteSemesterButton'
 
 export default async function SemestersPage() {
   const semesters = await getSemesters()
@@ -37,8 +38,8 @@ export default async function SemestersPage() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {semesters.map((semester) => (
-            <Card key={semester.id} className="hover:border-primary transition-colors h-full">
-              <Link href={`/dashboard/semester/${semester.id}`} className="block">
+            <Card key={semester.id} className="hover:border-primary transition-colors h-full flex flex-col">
+              <Link href={`/dashboard/semester/${semester.id}`} className="flex-1">
                 <CardHeader>
                   <CardTitle>{semester.name}</CardTitle>
                   <CardDescription>
@@ -62,6 +63,22 @@ export default async function SemestersPage() {
                   </div>
                 </CardContent>
               </Link>
+              <CardContent className="pt-0 border-t mt-auto">
+                <div className="flex items-center justify-end gap-2 mt-4">
+                  <Link href={`/dashboard/semester/${semester.id}`}>
+                    <Button variant="ghost" size="sm">
+                      <Pencil className="h-4 w-4 mr-1" />
+                      Edit
+                    </Button>
+                  </Link>
+                  <DeleteSemesterButton
+                    semesterId={semester.id}
+                    semesterName={semester.name}
+                    subjectCount={semester.subjects?.length || 0}
+                    redirectAfterDelete={false}
+                  />
+                </div>
+              </CardContent>
             </Card>
           ))}
         </div>
