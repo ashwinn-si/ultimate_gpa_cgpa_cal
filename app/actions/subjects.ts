@@ -43,7 +43,8 @@ export async function createSubject(formData: {
     .order('order', { ascending: false })
     .limit(1)
 
-  const nextOrder = (maxOrderData?.[0]?.order ?? -1) + 1
+  const maxOrder = (maxOrderData as any)?.[0]?.order ?? -1
+  const nextOrder = typeof maxOrder === 'number' ? maxOrder + 1 : 0
 
   // Insert subject
   const { data, error } = await supabase
@@ -55,7 +56,7 @@ export async function createSubject(formData: {
       grade_points: formData.gradePoints,
       credits: validated.credits,
       order: nextOrder,
-    })
+    } as any)
     .select()
     .single()
 
@@ -89,7 +90,7 @@ export async function updateSubject(
   if (formData.gradePoints !== undefined) updateData.grade_points = formData.gradePoints
   if (formData.credits !== undefined) updateData.credits = formData.credits
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('subjects')
     .update(updateData)
     .eq('id', id)
@@ -140,7 +141,8 @@ export async function bulkCreateSubjects(
     .order('order', { ascending: false })
     .limit(1)
 
-  let nextOrder = (maxOrderData?.[0]?.order ?? -1) + 1
+  const maxOrder = (maxOrderData as any)?.[0]?.order ?? -1
+  let nextOrder = typeof maxOrder === 'number' ? maxOrder + 1 : 0
 
   // Prepare data with orders
   const subjectsData = subjects.map((subject) => ({
@@ -155,7 +157,7 @@ export async function bulkCreateSubjects(
   // Insert subjects
   const { data, error } = await supabase
     .from('subjects')
-    .insert(subjectsData)
+    .insert(subjectsData as any)
     .select()
 
   if (error) throw new Error(error.message)

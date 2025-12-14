@@ -61,7 +61,8 @@ export async function createSemester(formData: {
     .order('order', { ascending: false })
     .limit(1)
 
-  const nextOrder = (maxOrderData?.[0]?.order ?? -1) + 1
+  const maxOrder = (maxOrderData as any)?.[0]?.order ?? -1
+  const nextOrder = typeof maxOrder === 'number' ? maxOrder + 1 : 0
 
   // Insert semester
   const { data, error } = await supabase
@@ -74,7 +75,7 @@ export async function createSemester(formData: {
       gpa: 0,
       total_credits: 0,
       order: nextOrder,
-    })
+    } as any)
     .select()
     .single()
 
@@ -96,7 +97,7 @@ export async function updateSemester(
 ) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('semesters')
     .update(formData)
     .eq('id', id)
@@ -137,10 +138,10 @@ export async function recalculateSemesterGPA(semesterId: string) {
 
   // Calculate GPA and total credits
   const gpa = calculateSemesterGPA(subjects as any)
-  const totalCredits = subjects.reduce((sum, s) => sum + s.credits, 0)
+  const totalCredits = (subjects as any).reduce((sum: number, s: any) => sum + s.credits, 0)
 
   // Update semester
-  const { error: updateError } = await supabase
+  const { error: updateError } = await (supabase as any)
     .from('semesters')
     .update({
       gpa,

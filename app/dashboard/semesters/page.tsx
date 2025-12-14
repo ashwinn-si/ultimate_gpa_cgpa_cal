@@ -37,7 +37,7 @@ export default async function SemestersPage() {
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {semesters.map((semester) => (
+          {semesters.map((semester: any) => (
             <Card key={semester.id} className="hover:border-primary transition-colors h-full flex flex-col">
               <Link href={`/dashboard/semester/${semester.id}`} className="flex-1">
                 <CardHeader>

@@ -17,7 +17,8 @@ interface SemesterDetailPageProps {
 
 export default async function SemesterDetailPage({ params }: SemesterDetailPageProps) {
   const { id } = await params
-  const semester = await getSemesterById(id)
+  const semesterData = await getSemesterById(id)
+  const semester = semesterData as any
 
   if (!semester) {
     return (
@@ -147,7 +148,7 @@ export default async function SemesterDetailPage({ params }: SemesterDetailPageP
                   </tr>
                 </thead>
                 <tbody>
-                  {subjects.map((subject) => (
+                  {subjects.map((subject: any) => (
                     <tr key={subject.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
                       <td className="py-3 px-4">{subject.name}</td>
                       <td className="py-3 px-4">

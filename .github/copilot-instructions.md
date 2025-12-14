@@ -61,21 +61,31 @@ This is a **Next.js 14+ web application** built with **TypeScript**, **TailwindC
 │   │   ├── SemesterCard.tsx
 │   │   ├── SemesterGrid.tsx
 │   │   ├── SemesterForm.tsx
-│   │   └── SemesterDetail.tsx
+│   │   ├── SemesterDetail.tsx
+│   │   └── DeleteSemesterButton.tsx
 │   ├── subject/
 │   │   ├── SubjectList.tsx
 │   │   ├── SubjectRow.tsx
 │   │   ├── SubjectForm.tsx
+│   │   ├── AddSubjectButton.tsx
+│   │   ├── EditSubjectButton.tsx
+│   │   ├── DeleteSubjectButton.tsx
 │   │   └── BulkSubjectImport.tsx
+│   ├── grades/
+│   │   ├── AddGradeButton.tsx
+│   │   ├── EditGradeButton.tsx
+│   │   └── DeleteGradeButton.tsx
 │   ├── dashboard/
 │   │   ├── CGPACard.tsx
 │   │   ├── StatsCard.tsx
 │   │   ├── GPATrendChart.tsx
 │   │   └── GradeDistributionChart.tsx
-│   └── shared/
-│       ├── ThemeToggle.tsx
-│       ├── SearchBar.tsx
-│       └── EmptyState.tsx
+│   ├── shared/
+│   │   ├── ThemeToggle.tsx
+│   │   ├── SearchBar.tsx
+│   │   └── EmptyState.tsx
+│   └── providers/
+│       └── ThemeProvider.tsx
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts                   # Supabase client
@@ -438,7 +448,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 /**
  * Calculate semester GPA using weighted average
- * Formula: GPA = Σ(Grade Points × Credits) / Σ(Credits)
+ * Formula: GPA = (Σ(Grade Points × Credits) / Σ(Credits × 10)) × 10
+ * Note: Total credit for a subject = credits × 10
  */
 export function calculateSemesterGPA(subjects: Subject[]): number {
   if (subjects.length === 0) return 0;
@@ -448,18 +459,19 @@ export function calculateSemesterGPA(subjects: Subject[]): number {
   
   for (const subject of subjects) {
     totalGradePoints += subject.gradePoints * subject.credits;
-    totalCredits += subject.credits;
+    totalCredits += subject.credits * 10;
   }
   
   if (totalCredits === 0) return 0;
   
-  const gpa = totalGradePoints / totalCredits;
+  const gpa = (totalGradePoints / totalCredits) * 10;
   return parseFloat(gpa.toFixed(2)); // Round to 2 decimal places
 }
 
 /**
  * Calculate overall CGPA across all semesters
- * Formula: CGPA = Σ(All Grade Points × Credits) / Σ(All Credits)
+ * Formula: CGPA = (Σ(All Grade Points × Credits) / Σ(All Credits × 10)) × 10
+ * Note: Total credit for a subject = credits × 10
  */
 export function calculateCGPA(semesters: Semester[]): number {
   if (semesters.length === 0) return 0;
@@ -472,13 +484,13 @@ export function calculateCGPA(semesters: Semester[]): number {
     
     for (const subject of semester.subjects) {
       totalGradePoints += subject.gradePoints * subject.credits;
-      totalCredits += subject.credits;
+      totalCredits += subject.credits * 10;
     }
   }
   
   if (totalCredits === 0) return 0;
   
-  const cgpa = totalGradePoints / totalCredits;
+  const cgpa = (totalGradePoints / totalCredits) * 10;
   return parseFloat(cgpa.toFixed(2));
 }
 
@@ -634,8 +646,6 @@ export interface GradeConfig {
   name: string;
   points: number;
   description?: string;
-  minPercentage?: number;
-  maxPercentage?: number;
   order: number;
   isDefault: boolean;
 }
@@ -1084,3 +1094,45 @@ const { level, color } = getPerformanceLevel(gpa);
 - Maintain accessibility standards (WCAG 2.1 AA)
 - Use consistent naming conventions
 - Add comments for complex logic
+
+## Grade Management
+
+### Grade Configuration
+- Grades are ordered by **points in ascending order** (lowest to highest)
+- Each grade has: name, points (0-10), description (optional)
+- **No min/max percentage fields** - removed from implementation
+- Grade points must be **unique per user** - validation prevents duplicates
+
+### Grade Deletion Behavior
+- When deleting a grade, all subjects using it are **automatically reassigned** to the second-highest grade
+- System prevents deletion if it's the only grade in the system
+- After reassignment, affected semester GPAs are automatically recalculated
+- User is warned about automatic reassignment in the confirmation dialog
+
+### Grade CRUD Operations
+- **Create**: `createGradeConfig()` - checks for duplicate points before creation
+- **Update**: `updateGradeConfig()` - checks for duplicate points (excluding current grade)
+- **Delete**: `deleteGradeConfig()` - reassigns subjects to second-highest grade, then deletes
+- **List**: `getGradeConfigs()` - returns grades ordered by points (ascending)
+
+### Validation Rules
+```typescript
+// Grade points must be unique per user
+const { data: existingGrades } = await supabase
+  .from('grade_configs')
+  .select('id')
+  .eq('user_id', user.id)
+  .eq('points', validated.points)
+  .limit(1)
+
+if (existingGrades && existingGrades.length > 0) {
+  throw new Error(`A grade with ${validated.points} points already exists`)
+}
+```
+
+## Theme Management
+
+- Uses **next-themes** for dark/light/system theme support
+- ThemeProvider wraps the entire app in `app/layout.tsx`
+- ThemeToggle component in settings page allows users to switch themes
+- Theme preference is persisted in localStorage

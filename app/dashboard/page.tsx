@@ -14,7 +14,7 @@ export default async function DashboardPage() {
     .order('year', { ascending: false })
     .order('order', { ascending: true })
 
-  const allSemesters = semesters || []
+  const allSemesters = (semesters as any) || []
 
   // Calculate total credits and credit scored
   let totalCredits = 0
@@ -136,7 +136,7 @@ export default async function DashboardPage() {
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {allSemesters.map((semester) => (
+              {allSemesters.map((semester: any) => (
                 <Link key={semester.id} href={`/dashboard/semester/${semester.id}`}>
                   <Card className="hover:border-primary transition-colors cursor-pointer">
                     <CardHeader>

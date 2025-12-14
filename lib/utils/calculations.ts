@@ -44,8 +44,9 @@ export function calculateCGPA(semesters: Semester[]): number {
 
     for (const subject of semester.subjects) {
       // Support both camelCase and snake_case
-      const gradePoints = subject.grade_points ?? (subject as any).gradePoints ?? 0
-      const credits = subject.credits ?? 0
+      const subj = subject as any
+      const gradePoints = subj.grade_points ?? subj.gradePoints ?? 0
+      const credits = subj.credits ?? 0
       
       // Credit scored = grade_points × credits
       creditScored += gradePoints * credits
@@ -126,8 +127,10 @@ export function calculateGradeDistribution(subjects: Subject[]) {
 export function getTopSubjects(subjects: Subject[], limit: number = 5): Subject[] {
   return [...subjects]
     .sort((a, b) => {
-      const aPoints = a.grade_points ?? (a as any).gradePoints ?? 0
-      const bPoints = b.grade_points ?? (b as any).gradePoints ?? 0
+      const aSubj = a as any
+      const bSubj = b as any
+      const aPoints = aSubj.grade_points ?? aSubj.gradePoints ?? 0
+      const bPoints = bSubj.grade_points ?? bSubj.gradePoints ?? 0
       return bPoints - aPoints
     })
     .slice(0, limit)
@@ -139,8 +142,10 @@ export function getTopSubjects(subjects: Subject[], limit: number = 5): Subject[
 export function getBottomSubjects(subjects: Subject[], limit: number = 5): Subject[] {
   return [...subjects]
     .sort((a, b) => {
-      const aPoints = a.grade_points ?? (a as any).gradePoints ?? 0
-      const bPoints = b.grade_points ?? (b as any).gradePoints ?? 0
+      const aSubj = a as any
+      const bSubj = b as any
+      const aPoints = aSubj.grade_points ?? aSubj.gradePoints ?? 0
+      const bPoints = bSubj.grade_points ?? bSubj.gradePoints ?? 0
       return aPoints - bPoints
     })
     .slice(0, limit)
