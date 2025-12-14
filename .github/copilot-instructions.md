@@ -242,6 +242,54 @@ function SemesterCard({ semester }: SemesterCardProps) {
 }
 ```
 
+### Passing Icons Between Server and Client Components
+
+**CRITICAL**: You cannot pass React component instances (like Lucide icons) from Server Components to Client Components. Only serializable data can be passed.
+
+```typescript
+// ❌ WRONG - This will cause an error
+// app/page.tsx (Server Component)
+import { BookOpen } from 'lucide-react'
+
+export default async function Page() {
+  return <StatsCard icon={BookOpen} />  // ERROR!
+}
+
+// ✅ CORRECT - Pass icon name as string
+// app/page.tsx (Server Component)
+export default async function Page() {
+  return <StatsCard iconName="BookOpen" />
+}
+
+// components/StatsCard.tsx (Client Component)
+'use client'
+import * as Icons from 'lucide-react'
+import { LucideIcon } from 'lucide-react'
+
+interface StatsCardProps {
+  iconName?: string
+  icon?: LucideIcon  // For use within Client Components
+}
+
+export function StatsCard({ iconName, icon }: StatsCardProps) {
+  // Dynamically get icon from string name
+  const DynamicIcon = iconName 
+    ? (Icons[iconName as keyof typeof Icons] as LucideIcon) 
+    : icon
+
+  return (
+    <Card>
+      {DynamicIcon && <DynamicIcon className="h-4 w-4" />}
+    </Card>
+  )
+}
+```
+
+**Pattern Summary:**
+- Server Components → Client Components: Use `iconName="IconName"` (string)
+- Client Components → Client Components: Can use `icon={IconComponent}` (component)
+- Client Components handle icon rendering with dynamic imports
+
 ---
 
 ## Server Actions Pattern
