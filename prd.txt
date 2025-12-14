@@ -1,0 +1,1062 @@
+# 🎓 CGPA/GPA Calculator Web Application - Product Requirements Document
+
+## 1. Product Overview
+
+### Vision
+Transform the existing Flutter mobile CGPA/GPA Calculator into a modern, responsive web application that helps students track and calculate their academic performance across semesters. Built with Next.js 14+ and Supabase for a seamless, full-stack experience.
+
+### Target Users
+- **Students** at all education levels (high school, college, university)
+- **Academic advisors** helping students track performance
+- **Parents** monitoring their children's academic progress
+
+### Core Value Proposition
+A professional, easy-to-use web platform for calculating weighted GPA (Grade Point Average) and CGPA (Cumulative Grade Point Average) with beautiful visualizations, real-time calculations, and secure cloud storage.
+
+---
+
+## 2. Technology Stack
+
+### Frontend
+- **Next.js 14+** (App Router with Server Components)
+- **TypeScript** for type safety
+- **TailwindCSS** for styling
+- **Shadcn/ui** for accessible component library
+- **Framer Motion** for animations
+- **Recharts** for data visualizations
+
+### Backend & Infrastructure
+- **Supabase** for:
+  - PostgreSQL database
+  - Authentication (email/password, OAuth)
+  - Realtime subscriptions
+  - Row Level Security (RLS)
+  - Storage for user data
+  - Edge Functions (if needed)
+
+### Deployment
+- **Vercel** for Next.js hosting
+- **Supabase Cloud** for database and auth
+
+---
+
+## 3. Core Features
+
+### F1: Semester Management
+**Description**: Create, view, edit, and delete academic semesters
+
+**User Actions**:
+- Add new semester with name (e.g., "Fall 2024") and year
+- Edit semester details
+- Delete semester (with confirmation)
+- View list of all semesters with GPA displayed
+- See total subjects and credits per semester
+- Custom ordering/sorting of semesters
+
+**Business Rules**:
+- Each semester must have a unique name per user
+- Deleting a semester deletes all associated subjects
+- GPA automatically calculated when subjects are added/modified
+
+---
+
+### F2: Subject Management
+**Description**: Manage subjects within each semester
+
+**User Actions**:
+- Add subject with name, grade, and credits
+- Edit subject details
+- Delete subjects
+- View all subjects in a semester as list or table
+- Bulk add subjects (paste from spreadsheet)
+
+**Business Rules**:
+- Credits range: 0.5 to 10 (in 0.5 increments)
+- Grade must be from configured grade system
+- Each subject belongs to exactly one semester
+
+**Validation**:
+- Subject name: required, 1-100 characters
+- Credits: required, numeric, 0.5-10
+- Grade: required, must match grade configuration
+
+---
+
+### F3: GPA/CGPA Calculation
+**Description**: Automatic weighted average calculation
+
+**Calculations**:
+```
+Semester GPA = Σ(Grade Points × Credits) / Σ(Credits)
+
+Overall CGPA = Σ(All Semester Grade Points × Credits) / Σ(All Credits)
+```
+
+**Display**:
+- Real-time calculation as subjects are modified
+- 2 decimal place precision
+- Visual indicators:
+  - Excellent: GPA ≥ 8.5 (Green)
+  - Good: GPA 7.0-8.4 (Blue)
+  - Average: GPA 6.0-6.9 (Yellow)
+  - Below Average: GPA < 6.0 (Red)
+
+**Business Rules**:
+- Empty semester shows GPA as 0.00
+- Calculations update instantly without page refresh
+- Failed courses (F grade) contribute 0 grade points
+
+---
+
+### F4: Grade Configuration System
+**Description**: Customizable grading scale
+
+**Predefined Grade Systems**:
+
+1. **10-Point Scale** (Default)
+   - A+ = 10, A = 9, B+ = 8, B = 7, C+ = 6, C = 5, D = 4, F = 0
+
+2. **4-Point Scale** (US Standard)
+   - A = 4.0, A- = 3.7, B+ = 3.3, B = 3.0, B- = 2.7, C+ = 2.3, C = 2.0, D = 1.0, F = 0
+
+3. **Letter Grade System**
+   - A, B, C, D, F with customizable points
+
+**User Actions**:
+- Select from predefined systems
+- Create custom grades with name and point value
+- Edit grade points
+- Delete custom grades (if not in use)
+- Export/import grade configurations
+
+**Business Rules**:
+- Grade names must be unique within a system
+- Grade points must be numeric (0-10 or 0-4 depending on system)
+- Cannot delete grades that are currently assigned to subjects
+- Default system applied to new users
+
+---
+
+### F5: Dashboard & Analytics
+**Description**: Visual overview of academic performance
+
+**Dashboard Components**:
+
+1. **CGPA Summary Card**
+   - Large display of overall CGPA
+   - Total credits completed
+   - Total number of semesters
+   - Performance badge (Excellent/Good/Average)
+
+2. **GPA Trend Chart**
+   - Line chart showing GPA progression across semesters
+   - X-axis: Semesters, Y-axis: GPA
+   - Hover tooltips with exact values
+
+3. **Grade Distribution Chart**
+   - Pie/Donut chart showing frequency of each grade
+   - Percentage breakdown
+   - Color-coded by grade
+
+4. **Semester Overview Cards**
+   - Grid of all semesters
+   - Quick view: Name, GPA, Credits, Subject Count
+   - Click to view semester details
+
+5. **Top/Bottom Performers**
+   - List of highest GPA subjects
+   - List of lowest GPA subjects
+   - Identifies strengths and areas for improvement
+
+**Interactivity**:
+- Responsive grid layout (1 column mobile, 2-3 columns desktop)
+- Animated number counters for GPA display
+- Smooth transitions on data updates
+- Export charts as PNG images
+
+---
+
+### F6: User Authentication
+**Description**: Secure user accounts via Supabase Auth
+
+**Authentication Methods**:
+- Email/Password registration and login
+- Google OAuth
+- GitHub OAuth (optional)
+- Magic link email authentication
+
+**User Actions**:
+- Sign up with email and password
+- Email verification
+- Login with credentials or OAuth
+- Forgot password (email reset link)
+- Logout
+
+**Features**:
+- Guest mode (localStorage only, no cloud sync)
+- Automatic session management
+- Secure password requirements (min 8 chars, 1 uppercase, 1 number, 1 special)
+- Remember me option
+
+---
+
+### F7: Data Import/Export
+**Description**: Backup and transfer data
+
+**Export Options**:
+- **JSON**: Complete data with metadata
+- **CSV**: Spreadsheet format (semesters, subjects, grades)
+- **PDF**: Printable grade report (future)
+
+**Import Options**:
+- Upload JSON backup file
+- Paste CSV data for bulk subject import
+- Data validation before import
+
+**Business Rules**:
+- Export includes timestamp in filename
+- Import validates data structure and types
+- Duplicate handling options (skip, overwrite, merge)
+
+---
+
+### F8: Theme System
+**Description**: Light/Dark/Auto theme modes
+
+**Theme Options**:
+- **Light Mode**: White backgrounds, dark text
+- **Dark Mode**: Dark backgrounds, light text
+- **Auto Mode**: Follows system preference
+
+**Implementation**:
+- Smooth transition animation (300ms)
+- All components support both themes
+- TailwindCSS dark: variant
+- Preference saved to user settings (Supabase) or localStorage (guest)
+
+---
+
+### F9: Settings & Preferences
+**Description**: User configuration options
+
+**Settings Categories**:
+
+1. **Appearance**
+   - Theme selection (Light/Dark/Auto)
+   - Font size (Small/Medium/Large)
+   - Compact/Comfortable layout density
+
+2. **Calculation**
+   - Default grading system
+   - Decimal precision (1-4 places)
+   - Include/exclude failed courses in CGPA
+
+3. **Account**
+   - Change password
+   - Update profile information
+   - Email preferences
+   - Delete account (with confirmation)
+
+4. **Data**
+   - Auto-save toggle
+   - Export all data
+   - Import data
+   - Clear all data (with confirmation)
+
+---
+
+### F10: Search & Filter
+**Description**: Find semesters and subjects quickly
+
+**Search Functionality**:
+- Global search bar in navigation
+- Search across semester names and subject names
+- Real-time results as you type
+- Debounced for performance (300ms)
+
+**Filter Options**:
+- Filter semesters by year
+- Filter by GPA range (e.g., show only GPA > 8.0)
+- Filter subjects by grade
+- Sort by: Name, GPA, Date, Credits
+
+---
+
+### F11: Tutorial & Help
+**Description**: Onboarding and guidance
+
+**Tutorial System**:
+- First-time user onboarding (5-step tour)
+- Interactive tooltips on key features
+- Help icon in navigation
+- "What's This?" contextual help buttons
+
+**Help Content**:
+- How to add semesters
+- How to configure grades
+- Understanding GPA calculations
+- FAQ section
+- Contact support link
+
+---
+
+### F12: Responsive Design
+**Description**: Optimized for all screen sizes
+
+**Breakpoints**:
+- Mobile: < 640px (1 column)
+- Tablet: 640px - 1024px (2 columns)
+- Desktop: > 1024px (3 columns)
+
+**Adaptations**:
+- Mobile: Bottom navigation, stacked cards
+- Tablet: Side navigation, grid layout
+- Desktop: Persistent sidebar, dashboard grid
+
+---
+
+## 4. Design System
+
+### Color Palette
+
+#### Light Mode
+```css
+/* Primary */
+--primary-50: #eef2ff
+--primary-500: #6366f1    /* Main brand color */
+--primary-600: #4f46e5
+--primary-700: #4338ca
+
+/* Neutral */
+--gray-50: #f8fafc
+--gray-100: #f1f5f9
+--gray-200: #e2e8f0
+--gray-600: #475569
+--gray-900: #0f172a
+
+/* Background */
+--background: #ffffff
+--surface: #f8fafc
+--text-primary: #0f172a
+--text-secondary: #475569
+
+/* Semantic */
+--success: #22c55e    /* Excellent GPA */
+--info: #3b82f6       /* Good GPA */
+--warning: #f59e0b    /* Average GPA */
+--error: #ef4444      /* Poor GPA */
+```
+
+#### Dark Mode
+```css
+/* Primary */
+--primary-400: #818cf8
+--primary-500: #6366f1
+
+/* Neutral */
+--gray-800: #1e293b
+--gray-900: #0f172a
+
+/* Background */
+--background: #0f172a
+--surface: #1e293b
+--text-primary: #f1f5f9
+--text-secondary: #94a3b8
+
+/* Semantic (slightly lighter for dark mode) */
+--success: #34d399
+--info: #60a5fa
+--warning: #fbbf24
+--error: #f87171
+```
+
+### Gradients
+```css
+/* Main gradient for hero sections */
+--gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%)
+
+/* Success gradient for high GPA cards */
+--gradient-success: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)
+
+/* Card hover effect */
+--gradient-hover: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%)
+```
+
+### Typography
+- **Font**: Inter (Primary), System UI Stack (Fallback)
+- **Sizes**:
+  - Heading 1: 2.5rem / 40px
+  - Heading 2: 2rem / 32px
+  - Heading 3: 1.5rem / 24px
+  - Body: 1rem / 16px
+  - Small: 0.875rem / 14px
+
+### Spacing
+- Base unit: 4px
+- Scale: 4, 8, 12, 16, 24, 32, 48, 64px
+
+### Border Radius
+- Small (buttons): 8px
+- Medium (cards): 12px
+- Large (modals): 16px
+- Full (avatars): 9999px
+
+### Shadows
+```css
+--shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05)
+--shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1)
+--shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1)
+--shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1)
+
+/* Colored shadows for emphasis */
+--shadow-primary: 0 10px 15px -3px rgb(99 102 241 / 0.3)
+--shadow-success: 0 10px 15px -3px rgb(34 197 94 / 0.3)
+```
+
+---
+
+## 5. Page Structure
+
+### 5.1 Home/Dashboard Page (`/`)
+**Purpose**: Main overview of academic performance
+
+**Layout**:
+```
++----------------------------------------------------------+
+|  Logo | Search | Profile | Theme Toggle                  |
++----------------------------------------------------------+
+|                                                          |
+|  Welcome back, [User Name]                              |
+|                                                          |
+|  +-------------------+  +-------------------+            |
+|  | Overall CGPA      |  | Total Credits     |            |
+|  |     8.75          |  |      120          |            |
+|  | Excellent ⭐      |  | 6 Semesters       |            |
+|  +-------------------+  +-------------------+            |
+|                                                          |
+|  GPA Trend                                               |
+|  +--------------------------------------------------+   |
+|  | [Line Chart: Semester GPA over time]             |   |
+|  +--------------------------------------------------+   |
+|                                                          |
+|  Your Semesters                    [+ Add Semester]      |
+|  +-------------+  +-------------+  +-------------+       |
+|  | Fall 2023   |  | Spring 2024 |  | Fall 2024   |       |
+|  | GPA: 8.5    |  | GPA: 9.0    |  | GPA: 8.3    |       |
+|  | 20 Credits  |  | 22 Credits  |  | 21 Credits  |       |
+|  | 5 Subjects  |  | 6 Subjects  |  | 5 Subjects  |       |
+|  | [View] [⋮]  |  | [View] [⋮]  |  | [View] [⋮]  |       |
+|  +-------------+  +-------------+  +-------------+       |
+|                                                          |
++----------------------------------------------------------+
+```
+
+---
+
+### 5.2 Semester Detail Page (`/semester/[id]`)
+**Purpose**: View and manage subjects within a semester
+
+**Layout**:
+```
++----------------------------------------------------------+
+|  [← Back to Dashboard]  Fall 2024                [⋮ Menu]|
++----------------------------------------------------------+
+|                                                          |
+|  +--------------------------------------------------+   |
+|  | Semester GPA: 8.75         Total Credits: 20     |   |
+|  | 5 Subjects                 Rank: #2 of 6 Sem     |   |
+|  +--------------------------------------------------+   |
+|                                                          |
+|  Subjects                              [+ Add Subject]   |
+|  +--------------------------------------------------+   |
+|  | Subject Name      | Grade | Credits | Actions    |   |
+|  |-------------------|-------|---------|------------|   |
+|  | Data Structures   |   A   |   4.0   | [Edit][Del]|   |
+|  | Algorithms        |   A   |   4.0   | [Edit][Del]|   |
+|  | Database Systems  |   B+  |   3.0   | [Edit][Del]|   |
+|  | Web Development   |   A-  |   4.0   | [Edit][Del]|   |
+|  | Math III          |   B   |   5.0   | [Edit][Del]|   |
+|  +--------------------------------------------------+   |
+|                                                          |
+|  Grade Distribution                                      |
+|  [Donut Chart: A: 40%, A-: 20%, B+: 20%, B: 20%]        |
+|                                                          |
++----------------------------------------------------------+
+```
+
+---
+
+### 5.3 Settings Page (`/settings`)
+**Purpose**: Configure app preferences
+
+**Layout**:
+```
++----------------------------------------------------------+
+|  Settings                                                |
++----------------------------------------------------------+
+|  [Sidebar]              | [Content Area]                 |
+|  • Appearance           |                                |
+|  • Grade System         | Appearance Settings            |
+|  • Account              |                                |
+|  • Data & Privacy       | Theme                          |
+|                         | ○ Light  ● Dark  ○ Auto       |
+|                         |                                |
+|                         | Font Size                      |
+|                         | [−]  Medium  [+]               |
+|                         |                                |
+|                         | Layout Density                 |
+|                         | ○ Compact  ● Comfortable       |
+|                         |                                |
+|                         | [Save Changes]                 |
+|                         |                                |
++----------------------------------------------------------+
+```
+
+---
+
+### 5.4 Grade Configuration Page (`/settings/grades`)
+**Purpose**: Manage grading system
+
+**Layout**:
+```
++----------------------------------------------------------+
+|  Grade Configuration                                     |
++----------------------------------------------------------+
+|                                                          |
+|  Grading System                                          |
+|  [Dropdown: 10-Point Scale ▼]  [Add Custom Grade]       |
+|                                                          |
+|  Current Grades                                          |
+|  +--------------------------------------------------+   |
+|  | Grade | Points | Description      | Actions      |   |
+|  |-------|--------|------------------|--------------|   |
+|  |  A+   |  10    | Outstanding      | [Edit][Del]  |   |
+|  |  A    |   9    | Excellent        | [Edit][Del]  |   |
+|  |  B+   |   8    | Very Good        | [Edit][Del]  |   |
+|  |  B    |   7    | Good             | [Edit][Del]  |   |
+|  |  C+   |   6    | Above Average    | [Edit][Del]  |   |
+|  |  C    |   5    | Average          | [Edit][Del]  |   |
+|  |  D    |   4    | Below Average    | [Edit][Del]  |   |
+|  |  F    |   0    | Fail             | [Edit][Del]  |   |
+|  +--------------------------------------------------+   |
+|                                                          |
+|  [Import Grades] [Export Grades] [Reset to Default]     |
+|                                                          |
++----------------------------------------------------------+
+```
+
+---
+
+## 6. API Endpoints (Supabase Schema)
+
+### 6.1 Database Tables
+
+#### `users` (Managed by Supabase Auth)
+```typescript
+{
+  id: uuid (Primary Key)
+  email: string
+  created_at: timestamp
+  updated_at: timestamp
+}
+```
+
+#### `user_settings`
+```typescript
+{
+  id: uuid (Primary Key)
+  user_id: uuid (Foreign Key → auth.users)
+  theme: enum ('light', 'dark', 'auto')
+  font_size: enum ('small', 'medium', 'large')
+  layout_density: enum ('compact', 'comfortable')
+  decimal_precision: integer (1-4)
+  default_grade_system: string
+  include_failed_in_cgpa: boolean
+  auto_save: boolean
+  created_at: timestamp
+  updated_at: timestamp
+}
+```
+
+#### `semesters`
+```typescript
+{
+  id: uuid (Primary Key)
+  user_id: uuid (Foreign Key → auth.users)
+  name: string (e.g., "Fall 2024")
+  year: integer
+  term: enum ('fall', 'spring', 'summer', 'winter')
+  gpa: decimal (computed)
+  total_credits: decimal (computed)
+  order: integer
+  created_at: timestamp
+  updated_at: timestamp
+}
+```
+
+#### `subjects`
+```typescript
+{
+  id: uuid (Primary Key)
+  semester_id: uuid (Foreign Key → semesters)
+  name: string (e.g., "Data Structures")
+  grade: string (e.g., "A", "B+")
+  grade_points: decimal (e.g., 10, 9, 8)
+  credits: decimal (0.5 - 10)
+  order: integer
+  created_at: timestamp
+  updated_at: timestamp
+}
+```
+
+#### `grade_configs`
+```typescript
+{
+  id: uuid (Primary Key)
+  user_id: uuid (Foreign Key → auth.users)
+  name: string (e.g., "A", "B+")
+  points: decimal (e.g., 10, 9, 8)
+  description: string (e.g., "Excellent")
+  min_percentage: integer (optional)
+  max_percentage: integer (optional)
+  order: integer
+  is_default: boolean
+  created_at: timestamp
+  updated_at: timestamp
+}
+```
+
+---
+
+### 6.2 Row Level Security (RLS) Policies
+
+**Enable RLS on all tables and create policies:**
+
+```sql
+-- Users can only read/write their own settings
+CREATE POLICY "Users can manage own settings"
+ON user_settings
+FOR ALL
+USING (auth.uid() = user_id);
+
+-- Users can only read/write their own semesters
+CREATE POLICY "Users can manage own semesters"
+ON semesters
+FOR ALL
+USING (auth.uid() = user_id);
+
+-- Users can only read/write subjects in their semesters
+CREATE POLICY "Users can manage own subjects"
+ON subjects
+FOR ALL
+USING (
+  semester_id IN (
+    SELECT id FROM semesters WHERE user_id = auth.uid()
+  )
+);
+
+-- Users can only read/write their own grade configs
+CREATE POLICY "Users can manage own grades"
+ON grade_configs
+FOR ALL
+USING (auth.uid() = user_id);
+```
+
+---
+
+### 6.3 Next.js API Routes (Server Actions)
+
+#### Semester Operations
+```typescript
+// app/actions/semesters.ts
+
+// Create semester
+async function createSemester(data: {
+  name: string
+  year: number
+  term?: string
+}) => Promise<Semester>
+
+// Get all semesters
+async function getSemesters() => Promise<Semester[]>
+
+// Get single semester
+async function getSemester(id: string) => Promise<Semester>
+
+// Update semester
+async function updateSemester(
+  id: string,
+  data: Partial<Semester>
+) => Promise<Semester>
+
+// Delete semester
+async function deleteSemester(id: string) => Promise<void>
+```
+
+#### Subject Operations
+```typescript
+// app/actions/subjects.ts
+
+// Create subject
+async function createSubject(data: {
+  semesterId: string
+  name: string
+  grade: string
+  credits: number
+}) => Promise<Subject>
+
+// Get subjects by semester
+async function getSubjects(semesterId: string) => Promise<Subject[]>
+
+// Update subject
+async function updateSubject(
+  id: string,
+  data: Partial<Subject>
+) => Promise<Subject>
+
+// Delete subject
+async function deleteSubject(id: string) => Promise<void>
+
+// Bulk create subjects
+async function bulkCreateSubjects(
+  semesterId: string,
+  subjects: Array<{ name: string; grade: string; credits: number }>
+) => Promise<Subject[]>
+```
+
+#### Grade Configuration Operations
+```typescript
+// app/actions/grades.ts
+
+// Get grade configurations
+async function getGradeConfigs() => Promise<GradeConfig[]>
+
+// Create grade
+async function createGrade(data: {
+  name: string
+  points: number
+  description?: string
+}) => Promise<GradeConfig>
+
+// Update grade
+async function updateGrade(
+  id: string,
+  data: Partial<GradeConfig>
+) => Promise<GradeConfig>
+
+// Delete grade
+async function deleteGrade(id: string) => Promise<void>
+
+// Get predefined grade systems
+async function getPresetGradeSystems() => {
+  '10-point': GradeConfig[]
+  '4-point': GradeConfig[]
+}
+```
+
+#### Analytics Operations
+```typescript
+// app/actions/analytics.ts
+
+// Get dashboard data
+async function getDashboardData() => Promise<{
+  cgpa: number
+  totalCredits: number
+  semesterCount: number
+  trends: Array<{ semester: string; gpa: number }>
+  gradeDistribution: Record<string, number>
+}>
+
+// Get GPA trends
+async function getGPATrends() => Promise<{
+  labels: string[]
+  data: number[]
+}>
+```
+
+#### Settings Operations
+```typescript
+// app/actions/settings.ts
+
+// Get user settings
+async function getSettings() => Promise<UserSettings>
+
+// Update settings
+async function updateSettings(
+  data: Partial<UserSettings>
+) => Promise<UserSettings>
+```
+
+#### Export/Import Operations
+```typescript
+// app/actions/data.ts
+
+// Export all data
+async function exportData(format: 'json' | 'csv') => Promise<Blob>
+
+// Import data
+async function importData(file: File) => Promise<{
+  success: boolean
+  imported: { semesters: number; subjects: number }
+  errors?: string[]
+}>
+```
+
+---
+
+### 6.4 Supabase Realtime Subscriptions
+
+Enable realtime updates for collaborative features (future):
+
+```typescript
+// Subscribe to semester changes
+supabase
+  .channel('semesters')
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'semesters',
+      filter: `user_id=eq.${userId}`
+    },
+    (payload) => {
+      // Update UI with new data
+    }
+  )
+  .subscribe()
+```
+
+---
+
+## 7. Component Structure
+
+### Key Components
+
+#### Layout Components
+- `Header.tsx` - Top navigation with logo, search, user menu
+- `Sidebar.tsx` - Left sidebar navigation (desktop)
+- `Footer.tsx` - Bottom footer with links
+- `MobileNav.tsx` - Bottom navigation (mobile)
+
+#### Semester Components
+- `SemesterCard.tsx` - Display semester with GPA and stats
+- `SemesterGrid.tsx` - Grid of semester cards
+- `SemesterForm.tsx` - Create/edit semester modal
+- `SemesterDetail.tsx` - Full semester view with subjects
+
+#### Subject Components
+- `SubjectList.tsx` - Table/list of subjects
+- `SubjectRow.tsx` - Individual subject row
+- `SubjectForm.tsx` - Create/edit subject modal
+- `BulkSubjectImport.tsx` - CSV import dialog
+
+#### Dashboard Components
+- `CGPACard.tsx` - Large CGPA display
+- `StatsCard.tsx` - Generic stats display
+- `GPATrendChart.tsx` - Line chart of GPA over time
+- `GradeDistributionChart.tsx` - Pie/donut chart
+- `PerformanceIndicator.tsx` - Color-coded GPA badge
+
+#### Form Components
+- `Input.tsx` - Text input with label and validation
+- `Select.tsx` - Dropdown select
+- `Button.tsx` - Primary/secondary buttons
+- `Modal.tsx` - Dialog/modal wrapper
+- `Form.tsx` - Form container with validation
+
+#### Utility Components
+- `ThemeToggle.tsx` - Light/dark mode switcher
+- `SearchBar.tsx` - Global search input
+- `EmptyState.tsx` - Empty state placeholder
+- `LoadingSpinner.tsx` - Loading indicator
+- `ErrorBoundary.tsx` - Error handling wrapper
+
+---
+
+## 8. User Flows
+
+### Flow 1: First-Time User Onboarding
+1. User lands on homepage
+2. Click "Get Started" → Registration page
+3. Sign up with email/password or OAuth
+4. Email verification (if using email/password)
+5. Redirect to dashboard (empty state)
+6. Tutorial overlay appears (5 steps)
+7. Tutorial guides through adding first semester
+8. Add first subject with grade
+9. See calculated GPA
+10. Complete onboarding
+
+### Flow 2: Adding a Semester
+1. User clicks "+ Add Semester" button
+2. Modal opens with form fields
+3. Enter semester name (e.g., "Fall 2024")
+4. Enter year (e.g., 2024)
+5. Optional: Select term (fall/spring/summer/winter)
+6. Click "Save" button
+7. Form validates inputs
+8. Semester created and appears in grid
+9. Success notification appears
+10. User can click semester to add subjects
+
+### Flow 3: Calculating GPA
+1. User opens semester detail page
+2. Clicks "+ Add Subject"
+3. Enters subject name, grade, and credits
+4. Subject saved to database
+5. GPA automatically recalculates
+6. Semester card updates with new GPA
+7. Dashboard CGPA updates
+8. Charts reflect new data
+9. Changes persist to Supabase
+10. Realtime update (if on multiple devices)
+
+### Flow 4: Exporting Data
+1. User navigates to Settings → Data & Privacy
+2. Clicks "Export Data" button
+3. Modal appears with format options (JSON/CSV)
+4. Selects desired format
+5. System generates export file
+6. Download automatically starts
+7. Filename includes timestamp
+8. Success notification confirms export
+9. File saved to user's downloads folder
+
+---
+
+## 9. Calculation Logic
+
+### GPA Calculation Function
+```typescript
+function calculateSemesterGPA(subjects: Subject[]): number {
+  if (subjects.length === 0) return 0;
+  
+  let totalGradePoints = 0;
+  let totalCredits = 0;
+  
+  for (const subject of subjects) {
+    totalGradePoints += subject.gradePoints * subject.credits;
+    totalCredits += subject.credits;
+  }
+  
+  if (totalCredits === 0) return 0;
+  
+  const gpa = totalGradePoints / totalCredits;
+  return Math.round(gpa * 100) / 100; // 2 decimal places
+}
+```
+
+### CGPA Calculation Function
+```typescript
+function calculateCGPA(semesters: Semester[]): number {
+  if (semesters.length === 0) return 0;
+  
+  let totalGradePoints = 0;
+  let totalCredits = 0;
+  
+  for (const semester of semesters) {
+    for (const subject of semester.subjects) {
+      totalGradePoints += subject.gradePoints * subject.credits;
+      totalCredits += subject.credits;
+    }
+  }
+  
+  if (totalCredits === 0) return 0;
+  
+  const cgpa = totalGradePoints / totalCredits;
+  return Math.round(cgpa * 100) / 100; // 2 decimal places
+}
+```
+
+### GPA Performance Level
+```typescript
+function getPerformanceLevel(gpa: number): {
+  level: string
+  color: string
+  description: string
+} {
+  if (gpa >= 8.5) {
+    return {
+      level: 'Excellent',
+      color: 'green',
+      description: 'Outstanding academic performance'
+    };
+  } else if (gpa >= 7.0) {
+    return {
+      level: 'Good',
+      color: 'blue',
+      description: 'Strong academic performance'
+    };
+  } else if (gpa >= 6.0) {
+    return {
+      level: 'Average',
+      color: 'yellow',
+      description: 'Satisfactory academic performance'
+    };
+  } else {
+    return {
+      level: 'Below Average',
+      color: 'red',
+      description: 'Needs improvement'
+    };
+  }
+}
+```
+
+---
+
+## 10. Success Metrics
+
+### User Engagement
+- Daily Active Users (DAU)
+- Weekly Active Users (WAU)
+- Average session duration
+- Number of semesters created per user
+- Number of subjects added per semester
+
+### Feature Adoption
+- % of users who complete onboarding
+- % of users who configure custom grades
+- % of users who export data
+- % of users who use dark mode
+- % of users with accounts vs. guest mode
+
+### Performance
+- Average page load time
+- Time to interactive (TTI)
+- API response times
+- Error rate
+
+### Retention
+- Day 1, 7, 30 retention rates
+- Churn rate
+- User lifetime value
+
+---
+
+## 11. Future Enhancements
+
+### Phase 2 Features
+- Mobile Progressive Web App (PWA) support
+- Share grade reports with advisors
+- Comparison with anonymized peer data
+- Semester goal setting ("I need X GPA to achieve Y CGPA")
+- Course recommendations based on performance
+- Scholarship eligibility calculator
+
+### Phase 3 Features
+- Mobile app (React Native)
+- Integration with university portals
+- AI-powered insights and predictions
+- Study group collaboration tools
+- Calendar integration for assignment tracking
+- Notification system for grade updates
+
+---
+
+## 12. Conclusion
+
+This web application transforms the existing Flutter mobile CGPA/GPA Calculator into a powerful, accessible, and beautiful web platform. By leveraging Next.js for performance and Supabase for backend infrastructure, we create a modern full-stack solution that provides students with an essential tool for academic success.
+
+The focus on simplicity, beautiful design, and accurate calculations ensures that students can easily track their academic progress, visualize trends, and make informed decisions about their education.

@@ -1,0 +1,1086 @@
+# GitHub Copilot Instructions - CGPA/GPA Calculator Web App
+
+## Project Overview
+
+This is a **Next.js 14+ web application** built with **TypeScript**, **TailwindCSS**, and **Supabase** for calculating and tracking student GPA (Grade Point Average) and CGPA (Cumulative Grade Point Average). The app provides semester management, subject tracking, grade configuration, analytics dashboards, and data export capabilities.
+
+---
+
+## Tech Stack
+
+### Frontend
+- **Next.js 14+** with App Router
+- **TypeScript** for type safety
+- **TailwindCSS** for styling
+- **Shadcn/ui** for UI components
+- **Framer Motion** for animations
+- **Recharts** for data visualization
+
+### Backend
+- **Supabase** (PostgreSQL + Auth + Realtime + Storage)
+- **Next.js Server Actions** for API logic
+- **Row Level Security (RLS)** for data protection
+
+### Deployment
+- **Vercel** for hosting
+- **Supabase Cloud** for backend services
+
+---
+
+## Project Structure
+
+```
+├── app/
+│   ├── (auth)/
+│   │   ├── login/page.tsx
+│   │   ├── register/page.tsx
+│   │   └── reset-password/page.tsx
+│   ├── (dashboard)/
+│   │   ├── page.tsx                    # Home dashboard
+│   │   ├── semester/[id]/page.tsx      # Semester detail
+│   │   ├── settings/page.tsx           # Settings
+│   │   └── settings/grades/page.tsx    # Grade configuration
+│   ├── actions/
+│   │   ├── semesters.ts                # Semester CRUD actions
+│   │   ├── subjects.ts                 # Subject CRUD actions
+│   │   ├── grades.ts                   # Grade config actions
+│   │   ├── analytics.ts                # Analytics data
+│   │   └── settings.ts                 # User settings
+│   ├── api/
+│   │   └── auth/[...nextauth]/route.ts # Auth API routes
+│   ├── layout.tsx
+│   └── globals.css
+├── components/
+│   ├── ui/                             # Shadcn/ui base components
+│   ├── layout/
+│   │   ├── Header.tsx
+│   │   ├── Sidebar.tsx
+│   │   ├── Footer.tsx
+│   │   └── MobileNav.tsx
+│   ├── semester/
+│   │   ├── SemesterCard.tsx
+│   │   ├── SemesterGrid.tsx
+│   │   ├── SemesterForm.tsx
+│   │   └── SemesterDetail.tsx
+│   ├── subject/
+│   │   ├── SubjectList.tsx
+│   │   ├── SubjectRow.tsx
+│   │   ├── SubjectForm.tsx
+│   │   └── BulkSubjectImport.tsx
+│   ├── dashboard/
+│   │   ├── CGPACard.tsx
+│   │   ├── StatsCard.tsx
+│   │   ├── GPATrendChart.tsx
+│   │   └── GradeDistributionChart.tsx
+│   └── shared/
+│       ├── ThemeToggle.tsx
+│       ├── SearchBar.tsx
+│       └── EmptyState.tsx
+├── lib/
+│   ├── supabase/
+│   │   ├── client.ts                   # Supabase client
+│   │   ├── server.ts                   # Server-side client
+│   │   └── middleware.ts               # Auth middleware
+│   ├── utils/
+│   │   ├── calculations.ts             # GPA/CGPA logic
+│   │   ├── validators.ts               # Form validators
+│   │   └── formatters.ts               # Data formatters
+│   └── constants.ts                    # App constants
+├── types/
+│   ├── database.ts                     # Supabase types
+│   ├── semester.ts
+│   ├── subject.ts
+│   └── grade.ts
+├── hooks/
+│   ├── useSemesters.ts
+│   ├── useSubjects.ts
+│   ├── useGrades.ts
+│   └── useAnalytics.ts
+└── public/
+    ├── images/
+    └── fonts/
+```
+
+---
+
+## Coding Standards
+
+### General Guidelines
+
+1. **Always use TypeScript** - No `any` types unless absolutely necessary
+2. **Use functional components** - Prefer function components over class components
+3. **Server Components by default** - Use `'use client'` only when necessary (interactivity, hooks, browser APIs)
+4. **Async Server Actions** - Use Server Actions for mutations instead of API routes
+5. **Type everything** - Interfaces for props, return types for functions
+
+### Naming Conventions
+
+```typescript
+// Components: PascalCase
+export function SemesterCard({ semester }: SemesterCardProps) {}
+
+// Functions: camelCase
+function calculateSemesterGPA(subjects: Subject[]): number {}
+
+// Constants: UPPER_SNAKE_CASE
+const MAX_CREDITS_PER_SUBJECT = 10;
+
+// Types/Interfaces: PascalCase
+interface Semester {
+  id: string;
+  name: string;
+}
+
+// Files: kebab-case for utilities, PascalCase for components
+// ✅ lib/utils/calculation-helpers.ts
+// ✅ components/SemesterCard.tsx
+```
+
+### Code Style
+
+```typescript
+// Always use explicit return types for functions
+function calculateGPA(subjects: Subject[]): number {
+  // implementation
+}
+
+// Use optional chaining and nullish coalescing
+const gpa = semester?.gpa ?? 0;
+
+// Prefer const over let
+const totalCredits = subjects.reduce((sum, s) => sum + s.credits, 0);
+
+// Use template literals for strings
+const message = `Semester ${semester.name} has GPA ${gpa.toFixed(2)}`;
+
+// Destructure props
+function SemesterCard({ semester, onEdit, onDelete }: SemesterCardProps) {}
+
+// Use early returns for guard clauses
+function calculateGPA(subjects: Subject[]): number {
+  if (subjects.length === 0) return 0;
+  if (!subjects.every(s => s.credits > 0)) return 0;
+  
+  // main logic here
+}
+```
+
+---
+
+## Component Patterns
+
+### Server Components (Default)
+
+```typescript
+// app/page.tsx
+import { getSemesters } from '@/app/actions/semesters';
+import { SemesterGrid } from '@/components/semester/SemesterGrid';
+
+export default async function DashboardPage() {
+  const semesters = await getSemesters();
+  
+  return (
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+      <SemesterGrid semesters={semesters} />
+    </div>
+  );
+}
+```
+
+### Client Components (Interactive)
+
+```typescript
+'use client';
+
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+
+interface SemesterFormProps {
+  onSubmit: (data: SemesterFormData) => Promise<void>;
+}
+
+export function SemesterForm({ onSubmit }: SemesterFormProps) {
+  const [name, setName] = useState('');
+  const [year, setYear] = useState(new Date().getFullYear());
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await onSubmit({ name, year });
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* form fields */}
+    </form>
+  );
+}
+```
+
+### Composite Pattern
+
+```typescript
+// Break large components into smaller sub-components
+function SemesterCard({ semester }: SemesterCardProps) {
+  return (
+    <Card>
+      <SemesterCardHeader semester={semester} />
+      <SemesterCardBody semester={semester} />
+      <SemesterCardFooter semester={semester} />
+    </Card>
+  );
+}
+```
+
+---
+
+## Server Actions Pattern
+
+### CRUD Operations
+
+```typescript
+// app/actions/semesters.ts
+'use server';
+
+import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
+
+export async function createSemester(data: {
+  name: string;
+  year: number;
+  term?: string;
+}) {
+  const supabase = createClient();
+  
+  // Get current user
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    throw new Error('Unauthorized');
+  }
+  
+  // Insert semester
+  const { data: semester, error } = await supabase
+    .from('semesters')
+    .insert({
+      user_id: user.id,
+      name: data.name,
+      year: data.year,
+      term: data.term,
+      gpa: 0,
+      total_credits: 0,
+      order: 0,
+    })
+    .select()
+    .single();
+  
+  if (error) throw new Error(error.message);
+  
+  // Revalidate cache
+  revalidatePath('/');
+  
+  return semester;
+}
+
+export async function getSemesters() {
+  const supabase = createClient();
+  
+  const { data, error } = await supabase
+    .from('semesters')
+    .select('*')
+    .order('year', { ascending: false })
+    .order('order', { ascending: true });
+  
+  if (error) throw new Error(error.message);
+  
+  return data;
+}
+
+export async function updateSemester(id: string, data: Partial<Semester>) {
+  const supabase = createClient();
+  
+  const { data: semester, error } = await supabase
+    .from('semesters')
+    .update(data)
+    .eq('id', id)
+    .select()
+    .single();
+  
+  if (error) throw new Error(error.message);
+  
+  revalidatePath('/');
+  revalidatePath(`/semester/${id}`);
+  
+  return semester;
+}
+
+export async function deleteSemester(id: string) {
+  const supabase = createClient();
+  
+  const { error } = await supabase
+    .from('semesters')
+    .delete()
+    .eq('id', id);
+  
+  if (error) throw new Error(error.message);
+  
+  revalidatePath('/');
+}
+```
+
+### Using Server Actions in Components
+
+```typescript
+'use client';
+
+import { createSemester } from '@/app/actions/semesters';
+import { useTransition } from 'react';
+import { toast } from 'sonner';
+
+export function SemesterForm() {
+  const [isPending, startTransition] = useTransition();
+  
+  const handleSubmit = async (formData: FormData) => {
+    startTransition(async () => {
+      try {
+        await createSemester({
+          name: formData.get('name') as string,
+          year: parseInt(formData.get('year') as string),
+        });
+        toast.success('Semester created successfully!');
+      } catch (error) {
+        toast.error('Failed to create semester');
+      }
+    });
+  };
+  
+  return (
+    <form action={handleSubmit}>
+      {/* form fields */}
+      <Button type="submit" disabled={isPending}>
+        {isPending ? 'Creating...' : 'Create Semester'}
+      </Button>
+    </form>
+  );
+}
+```
+
+---
+
+## Styling Guidelines
+
+### TailwindCSS Best Practices
+
+```typescript
+// Use Tailwind utility classes
+<div className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 rounded-lg shadow-md">
+
+// Use cn() helper for conditional classes
+import { cn } from '@/lib/utils';
+
+<div className={cn(
+  'px-4 py-2 rounded-md',
+  isActive && 'bg-primary text-white',
+  isDisabled && 'opacity-50 cursor-not-allowed'
+)}>
+
+// Responsive design with Tailwind breakpoints
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+// Dark mode with dark: prefix
+<div className="bg-white text-gray-900 dark:bg-gray-900 dark:text-white">
+```
+
+### Color System
+
+```typescript
+// Use CSS variables defined in globals.css
+// These are theme-aware and change with light/dark mode
+
+// Primary colors
+className="bg-primary text-primary-foreground"
+
+// Semantic colors
+className="text-success"  // Green for excellent GPA
+className="text-warning"  // Yellow for average GPA
+className="text-error"    // Red for poor GPA
+className="text-info"     // Blue for good GPA
+
+// Neutral colors
+className="bg-background text-foreground"
+className="bg-card text-card-foreground"
+className="bg-muted text-muted-foreground"
+```
+
+### Component Styling
+
+```typescript
+// Use Shadcn/ui components as base
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+
+// Extend with Tailwind classes
+<Button className="w-full" variant="default" size="lg">
+  Add Semester
+</Button>
+
+// Gradients for visual appeal
+<div className="bg-gradient-to-br from-primary/20 to-purple-500/20 p-8 rounded-xl">
+```
+
+---
+
+## GPA Calculation Logic
+
+### Core Calculation Functions
+
+```typescript
+// lib/utils/calculations.ts
+
+/**
+ * Calculate semester GPA using weighted average
+ * Formula: GPA = Σ(Grade Points × Credits) / Σ(Credits)
+ */
+export function calculateSemesterGPA(subjects: Subject[]): number {
+  if (subjects.length === 0) return 0;
+  
+  let totalGradePoints = 0;
+  let totalCredits = 0;
+  
+  for (const subject of subjects) {
+    totalGradePoints += subject.gradePoints * subject.credits;
+    totalCredits += subject.credits;
+  }
+  
+  if (totalCredits === 0) return 0;
+  
+  const gpa = totalGradePoints / totalCredits;
+  return parseFloat(gpa.toFixed(2)); // Round to 2 decimal places
+}
+
+/**
+ * Calculate overall CGPA across all semesters
+ * Formula: CGPA = Σ(All Grade Points × Credits) / Σ(All Credits)
+ */
+export function calculateCGPA(semesters: Semester[]): number {
+  if (semesters.length === 0) return 0;
+  
+  let totalGradePoints = 0;
+  let totalCredits = 0;
+  
+  for (const semester of semesters) {
+    if (!semester.subjects) continue;
+    
+    for (const subject of semester.subjects) {
+      totalGradePoints += subject.gradePoints * subject.credits;
+      totalCredits += subject.credits;
+    }
+  }
+  
+  if (totalCredits === 0) return 0;
+  
+  const cgpa = totalGradePoints / totalCredits;
+  return parseFloat(cgpa.toFixed(2));
+}
+
+/**
+ * Get performance level based on GPA
+ */
+export function getPerformanceLevel(gpa: number) {
+  if (gpa >= 8.5) {
+    return {
+      level: 'Excellent',
+      color: 'text-success',
+      bgColor: 'bg-success/10',
+      description: 'Outstanding performance',
+    };
+  } else if (gpa >= 7.0) {
+    return {
+      level: 'Good',
+      color: 'text-info',
+      bgColor: 'bg-info/10',
+      description: 'Strong performance',
+    };
+  } else if (gpa >= 6.0) {
+    return {
+      level: 'Average',
+      color: 'text-warning',
+      bgColor: 'bg-warning/10',
+      description: 'Satisfactory performance',
+    };
+  } else {
+    return {
+      level: 'Below Average',
+      color: 'text-error',
+      bgColor: 'bg-error/10',
+      description: 'Needs improvement',
+    };
+  }
+}
+
+/**
+ * Calculate total credits for a semester
+ */
+export function calculateTotalCredits(subjects: Subject[]): number {
+  return subjects.reduce((sum, subject) => sum + subject.credits, 0);
+}
+```
+
+### Using Calculations
+
+```typescript
+// In components
+import { calculateSemesterGPA, getPerformanceLevel } from '@/lib/utils/calculations';
+
+const gpa = calculateSemesterGPA(semester.subjects);
+const performance = getPerformanceLevel(gpa);
+
+<div className={performance.bgColor}>
+  <span className={performance.color}>{gpa.toFixed(2)}</span>
+  <span>{performance.level}</span>
+</div>
+```
+
+---
+
+## Database Types
+
+### Generate Supabase Types
+
+```bash
+# Generate TypeScript types from Supabase schema
+npx supabase gen types typescript --project-id <project-id> > types/database.ts
+```
+
+### Type Definitions
+
+```typescript
+// types/database.ts (auto-generated)
+export type Database = {
+  public: {
+    Tables: {
+      semesters: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          year: number;
+          term: string | null;
+          gpa: number;
+          total_credits: number;
+          order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          year: number;
+          term?: string | null;
+          gpa?: number;
+          total_credits?: number;
+          order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          year?: number;
+          term?: string | null;
+          gpa?: number;
+          total_credits?: number;
+          order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      // ... other tables
+    };
+  };
+};
+
+// types/semester.ts (custom types)
+export interface Semester {
+  id: string;
+  userId: string;
+  name: string;
+  year: number;
+  term?: string;
+  gpa: number;
+  totalCredits: number;
+  order: number;
+  subjects?: Subject[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Subject {
+  id: string;
+  semesterId: string;
+  name: string;
+  grade: string;
+  gradePoints: number;
+  credits: number;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface GradeConfig {
+  id: string;
+  userId: string;
+  name: string;
+  points: number;
+  description?: string;
+  minPercentage?: number;
+  maxPercentage?: number;
+  order: number;
+  isDefault: boolean;
+}
+```
+
+---
+
+## Form Validation
+
+### Zod Schemas
+
+```typescript
+// lib/utils/validators.ts
+import { z } from 'zod';
+
+export const semesterSchema = z.object({
+  name: z.string()
+    .min(1, 'Semester name is required')
+    .max(100, 'Name must be less than 100 characters'),
+  year: z.number()
+    .int('Year must be an integer')
+    .min(2000, 'Year must be 2000 or later')
+    .max(2100, 'Year must be 2100 or earlier'),
+  term: z.enum(['fall', 'spring', 'summer', 'winter']).optional(),
+});
+
+export const subjectSchema = z.object({
+  name: z.string()
+    .min(1, 'Subject name is required')
+    .max(100, 'Name must be less than 100 characters'),
+  grade: z.string()
+    .min(1, 'Grade is required'),
+  credits: z.number()
+    .min(0.5, 'Credits must be at least 0.5')
+    .max(10, 'Credits cannot exceed 10')
+    .refine(
+      (val) => val % 0.5 === 0,
+      'Credits must be in increments of 0.5'
+    ),
+});
+
+export const gradeConfigSchema = z.object({
+  name: z.string()
+    .min(1, 'Grade name is required')
+    .max(10, 'Name must be less than 10 characters'),
+  points: z.number()
+    .min(0, 'Points must be non-negative')
+    .max(10, 'Points cannot exceed 10'),
+  description: z.string().max(100).optional(),
+});
+```
+
+### React Hook Form Integration
+
+```typescript
+'use client';
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { subjectSchema } from '@/lib/utils/validators';
+
+export function SubjectForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(subjectSchema),
+  });
+  
+  const onSubmit = async (data: z.infer<typeof subjectSchema>) => {
+    // Submit logic
+  };
+  
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <input {...register('name')} />
+      {errors.name && <span>{errors.name.message}</span>}
+      
+      <input {...register('credits', { valueAsNumber: true })} />
+      {errors.credits && <span>{errors.credits.message}</span>}
+    </form>
+  );
+}
+```
+
+---
+
+## Error Handling
+
+### Try-Catch Pattern
+
+```typescript
+// In Server Actions
+export async function createSemester(data: SemesterFormData) {
+  try {
+    const supabase = createClient();
+    
+    // Validate input
+    const validated = semesterSchema.parse(data);
+    
+    // Database operation
+    const { data: semester, error } = await supabase
+      .from('semesters')
+      .insert(validated)
+      .select()
+      .single();
+    
+    if (error) {
+      throw new Error(`Database error: ${error.message}`);
+    }
+    
+    revalidatePath('/');
+    return { success: true, data: semester };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { success: false, error: 'Validation failed', details: error.errors };
+    }
+    
+    return { success: false, error: error.message };
+  }
+}
+```
+
+### Error Boundaries
+
+```typescript
+// app/error.tsx
+'use client';
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen">
+      <h2 className="text-2xl font-bold mb-4">Something went wrong!</h2>
+      <p className="text-muted-foreground mb-4">{error.message}</p>
+      <Button onClick={reset}>Try again</Button>
+    </div>
+  );
+}
+```
+
+---
+
+## Testing Guidelines
+
+### Unit Tests (Jest + React Testing Library)
+
+```typescript
+// __tests__/utils/calculations.test.ts
+import { calculateSemesterGPA, calculateCGPA } from '@/lib/utils/calculations';
+
+describe('GPA Calculations', () => {
+  describe('calculateSemesterGPA', () => {
+    it('should calculate GPA correctly', () => {
+      const subjects = [
+        { name: 'Math', grade: 'A', gradePoints: 10, credits: 4 },
+        { name: 'Physics', grade: 'B', gradePoints: 7, credits: 3 },
+      ];
+      
+      const gpa = calculateSemesterGPA(subjects);
+      expect(gpa).toBe(8.71);
+    });
+    
+    it('should return 0 for empty subjects', () => {
+      expect(calculateSemesterGPA([])).toBe(0);
+    });
+    
+    it('should handle zero credits', () => {
+      const subjects = [{ name: 'Test', gradePoints: 10, credits: 0 }];
+      expect(calculateSemesterGPA(subjects)).toBe(0);
+    });
+  });
+});
+```
+
+### Component Tests
+
+```typescript
+// __tests__/components/SemesterCard.test.tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import { SemesterCard } from '@/components/semester/SemesterCard';
+
+describe('SemesterCard', () => {
+  const mockSemester = {
+    id: '1',
+    name: 'Fall 2024',
+    year: 2024,
+    gpa: 8.75,
+    totalCredits: 20,
+    subjects: [],
+  };
+  
+  it('renders semester information', () => {
+    render(<SemesterCard semester={mockSemester} />);
+    
+    expect(screen.getByText('Fall 2024')).toBeInTheDocument();
+    expect(screen.getByText('8.75')).toBeInTheDocument();
+    expect(screen.getByText('20 Credits')).toBeInTheDocument();
+  });
+  
+  it('calls onEdit when edit button clicked', () => {
+    const onEdit = jest.fn();
+    render(<SemesterCard semester={mockSemester} onEdit={onEdit} />);
+    
+    fireEvent.click(screen.getByRole('button', { name: /edit/i }));
+    expect(onEdit).toHaveBeenCalledWith(mockSemester.id);
+  });
+});
+```
+
+---
+
+## Performance Optimization
+
+### React Best Practices
+
+```typescript
+// Use React.memo for expensive components
+export const SemesterCard = React.memo(({ semester }: SemesterCardProps) => {
+  // component logic
+});
+
+// Use useMemo for expensive calculations
+const cgpa = useMemo(() => calculateCGPA(semesters), [semesters]);
+
+// Use useCallback for stable function references
+const handleDelete = useCallback((id: string) => {
+  deleteSemester(id);
+}, []);
+
+// Lazy load heavy components
+const ChartComponent = dynamic(() => import('@/components/GPATrendChart'), {
+  loading: () => <Spinner />,
+  ssr: false,
+});
+```
+
+### Image Optimization
+
+```typescript
+// Use Next.js Image component
+import Image from 'next/image';
+
+<Image
+  src="/logo.png"
+  alt="Logo"
+  width={200}
+  height={100}
+  priority // For above-the-fold images
+/>
+```
+
+---
+
+## Common Tasks
+
+### Add a New Page
+
+```bash
+# Create new page file
+mkdir -p app/(dashboard)/analytics
+touch app/(dashboard)/analytics/page.tsx
+```
+
+```typescript
+// app/(dashboard)/analytics/page.tsx
+import { getAnalytics } from '@/app/actions/analytics';
+
+export default async function AnalyticsPage() {
+  const data = await getAnalytics();
+  
+  return (
+    <div>
+      <h1>Analytics</h1>
+      {/* content */}
+    </div>
+  );
+}
+```
+
+### Add a New Server Action
+
+```typescript
+// app/actions/new-feature.ts
+'use server';
+
+import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
+
+export async function doSomething(params: SomeType) {
+  const supabase = createClient();
+  
+  // Auth check
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
+  
+  // Database operation
+  const { data, error } = await supabase
+    .from('table_name')
+    .insert({ ...params, user_id: user.id })
+    .select()
+    .single();
+  
+  if (error) throw new Error(error.message);
+  
+  // Revalidate
+  revalidatePath('/path');
+  
+  return data;
+}
+```
+
+### Add a New Component
+
+```typescript
+// components/feature/NewComponent.tsx
+interface NewComponentProps {
+  data: SomeType;
+  onAction?: () => void;
+}
+
+export function NewComponent({ data, onAction }: NewComponentProps) {
+  return (
+    <div className="p-4 border rounded-lg">
+      {/* component content */}
+    </div>
+  );
+}
+```
+
+---
+
+## Environment Variables
+
+```bash
+# .env.local
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# Optional
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+---
+
+## Git Workflow
+
+### Commit Message Format
+
+```
+feat: Add semester deletion functionality
+fix: Correct GPA calculation rounding
+docs: Update README with setup instructions
+style: Format code with Prettier
+refactor: Extract GPA logic to separate utility
+test: Add tests for CGPA calculation
+chore: Update dependencies
+```
+
+### Branch Naming
+
+```
+feature/semester-management
+fix/gpa-calculation-bug
+docs/api-documentation
+refactor/component-structure
+```
+
+---
+
+## Key Principles
+
+1. **Server-First**: Use Server Components and Server Actions by default
+2. **Type Safety**: Always use TypeScript, avoid `any`
+3. **Accessibility**: Ensure keyboard navigation and screen reader support
+4. **Performance**: Optimize with memoization, lazy loading, and caching
+5. **User Experience**: Fast, responsive, intuitive interface
+6. **Data Integrity**: Validate inputs, handle errors gracefully
+7. **Security**: Use RLS policies, sanitize inputs, secure auth
+8. **Code Quality**: Clean, readable, well-documented code
+9. **Testing**: Write tests for critical logic
+10. **Consistency**: Follow established patterns and conventions
+
+---
+
+## Quick Reference
+
+### Create Semester
+```typescript
+await createSemester({ name: 'Fall 2024', year: 2024 });
+```
+
+### Add Subject
+```typescript
+await createSubject({
+  semesterId: 'sem-id',
+  name: 'Math',
+  grade: 'A',
+  credits: 4,
+});
+```
+
+### Calculate GPA
+```typescript
+const gpa = calculateSemesterGPA(subjects);
+```
+
+### Calculate CGPA
+```typescript
+const cgpa = calculateCGPA(semesters);
+```
+
+### Get Performance Level
+```typescript
+const { level, color } = getPerformanceLevel(gpa);
+```
+
+---
+
+## Support & Resources
+
+- **Next.js Docs**: https://nextjs.org/docs
+- **Supabase Docs**: https://supabase.com/docs
+- **TailwindCSS Docs**: https://tailwindcss.com/docs
+- **Shadcn/ui**: https://ui.shadcn.com
+- **PRD**: See `prd.txt` in project root
+
+---
+
+## Notes for AI Assistants
+
+- Always check existing patterns before creating new ones
+- Prioritize type safety and error handling
+- Use Server Components unless client interactivity is needed
+- Follow the established folder structure
+- Reference the PRD for feature requirements
+- Test calculations thoroughly (GPA/CGPA logic is critical)
+- Ensure responsive design (mobile-first approach)
+- Maintain accessibility standards (WCAG 2.1 AA)
+- Use consistent naming conventions
+- Add comments for complex logic
