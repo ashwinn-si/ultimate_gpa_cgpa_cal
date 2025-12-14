@@ -16,6 +16,7 @@ import { Pencil } from 'lucide-react'
 import { toast } from 'sonner'
 import { updateGradeConfig } from '@/app/actions/grades'
 import { useRouter } from 'next/navigation'
+import { Spinner } from '@/components/ui/spinner'
 
 interface EditGradeButtonProps {
   gradeId: string
@@ -132,11 +133,18 @@ export function EditGradeButton({
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isPending || !name || !points}>
-                {isPending ? 'Updating...' : 'Update Grade'}
+                {isPending ? (
+                  <>
+                    <Spinner size="sm" className="mr-2" />
+                    Updating...
+                  </>
+                ) : (
+                  'Update Grade'
+                )}
               </Button>
             </DialogFooter>
           </form>

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { deleteSubject } from '@/app/actions/subjects'
 import { toast } from 'sonner'
+import { Spinner } from '@/components/ui/spinner'
 
 interface DeleteSubjectButtonProps {
   subjectId: string
@@ -67,7 +68,14 @@ export function DeleteSubjectButton({
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
-              {isPending ? 'Deleting...' : 'Delete Subject'}
+              {isPending ? (
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Subject'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

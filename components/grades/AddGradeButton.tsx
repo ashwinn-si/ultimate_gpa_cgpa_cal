@@ -17,6 +17,7 @@ import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { createGradeConfig } from '@/app/actions/grades'
 import { useRouter } from 'next/navigation'
+import { Spinner } from '@/components/ui/spinner'
 
 export function AddGradeButton() {
   const router = useRouter()
@@ -124,11 +125,18 @@ export function AddGradeButton() {
             </p>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
               Cancel
             </Button>
             <Button type="submit" disabled={isPending || !name || !points}>
-              {isPending ? 'Creating...' : 'Create Grade'}
+              {isPending ? (
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  Creating...
+                </>
+              ) : (
+                'Create Grade'
+              )}
             </Button>
           </DialogFooter>
         </form>

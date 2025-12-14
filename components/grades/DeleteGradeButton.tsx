@@ -14,6 +14,7 @@ import {
 import { deleteGradeConfig } from '@/app/actions/grades'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { Spinner } from '@/components/ui/spinner'
 
 interface DeleteGradeButtonProps {
   gradeId: string
@@ -79,7 +80,14 @@ export function DeleteGradeButton({
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
-              {isPending ? 'Deleting...' : 'Delete Grade'}
+              {isPending ? (
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Grade'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

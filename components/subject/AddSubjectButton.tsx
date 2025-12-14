@@ -25,6 +25,8 @@ import { toast } from 'sonner'
 import { createSubject } from '@/app/actions/subjects'
 import { getGradeConfigs } from '@/app/actions/grades'
 import { useRouter } from 'next/navigation'
+import { Spinner } from '@/components/ui/spinner'
+import { LoadingOverlay } from '@/components/shared/LoadingOverlay'
 
 interface AddSubjectButtonProps {
   semesterId: string
@@ -36,6 +38,7 @@ export function AddSubjectButton({ semesterId, variant = 'default', size = 'defa
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [loadingGrades, setLoadingGrades] = useState(false)
   const [gradeConfigs, setGradeConfigs] = useState<any[]>([])
 
   const [name, setName] = useState('')
@@ -44,11 +47,15 @@ export function AddSubjectButton({ semesterId, variant = 'default', size = 'defa
 
   useEffect(() => {
     async function loadGrades() {
+      setLoadingGrades(true)
       try {
         const configs = await getGradeConfigs()
         setGradeConfigs(configs)
       } catch (error) {
         console.error('Failed to load grade configs:', error)
+        toast.error('Failed to load grade configurations')
+      } finally {
+        setLoadingGrades(false)
       }
     }
     if (open) {
@@ -152,12 +159,20 @@ export function AddSubjectButton({ semesterId, variant = 'default', size = 'defa
               </p>
             </div>
           </div>
+          {loadingGrades && <LoadingOverlay message="Loading grades..." />}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !selectedGrade}>
-              {loading ? 'Adding...' : 'Add Subject'}
+            <Button type="submit" disabled={loading || !selectedGrade || loadingGrades}>
+              {loading ? (
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  Adding...
+                </>
+              ) : (
+                'Add Subject'
+              )}
             </Button>
           </DialogFooter>
         </form>

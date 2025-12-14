@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog'
 import { deleteSemester } from '@/app/actions/semesters'
 import { toast } from 'sonner'
+import { Spinner } from '@/components/ui/spinner'
 
 interface DeleteSemesterButtonProps {
   semesterId: string
@@ -104,7 +105,14 @@ export function DeleteSemesterButton({
               }}
               disabled={isPending}
             >
-              {isPending ? 'Deleting...' : 'Delete Semester'}
+              {isPending ? (
+                <>
+                  <Spinner size="sm" className="mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Semester'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
