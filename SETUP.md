@@ -64,7 +64,7 @@ Your CGPA Calculator web application has been successfully created! The applicat
 
 ### 2. Configure Environment Variables
 
-Create a `.env.local` file in the project root:
+Create a `.env` file in the project root:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
@@ -157,7 +157,7 @@ npm run lint
 ## 🐛 Troubleshooting
 
 ### "Error: Unauthorized"
-- Check if `.env.local` file exists with correct Supabase credentials
+- Check if `.env` file exists with correct Supabase credentials
 - Restart the dev server after adding environment variables
 
 ### "Database error: relation does not exist"

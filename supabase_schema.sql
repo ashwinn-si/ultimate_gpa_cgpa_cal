@@ -1,8 +1,49 @@
 -- CGPA Calculator Database Schema
 -- Run this SQL in Supabase SQL Editor to create all tables and policies
+-- ⚠️  WARNING: This script will DELETE ALL DATA and recreate the database schema from scratch
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ========================================
+-- DROP EXISTING OBJECTS (IN REVERSE ORDER)
+-- ========================================
+
+-- Drop policies first (tables only, not views)
+DROP POLICY IF EXISTS "Users can view their own settings" ON user_settings;
+DROP POLICY IF EXISTS "Users can insert their own settings" ON user_settings;
+DROP POLICY IF EXISTS "Users can update their own settings" ON user_settings;
+DROP POLICY IF EXISTS "Users can view their own grade configs" ON grade_configs;
+DROP POLICY IF EXISTS "Users can insert their own grade configs" ON grade_configs;
+DROP POLICY IF EXISTS "Users can update their own grade configs" ON grade_configs;
+DROP POLICY IF EXISTS "Users can delete their own grade configs" ON grade_configs;
+DROP POLICY IF EXISTS "Users can view subjects in their semesters" ON subjects;
+DROP POLICY IF EXISTS "Users can insert subjects in their semesters" ON subjects;
+DROP POLICY IF EXISTS "Users can update subjects in their semesters" ON subjects;
+DROP POLICY IF EXISTS "Users can delete subjects in their semesters" ON subjects;
+DROP POLICY IF EXISTS "Users can view their own semesters" ON semesters;
+DROP POLICY IF EXISTS "Users can insert their own semesters" ON semesters;
+DROP POLICY IF EXISTS "Users can update their own semesters" ON semesters;
+DROP POLICY IF EXISTS "Users can delete their own semesters" ON semesters;
+
+-- Drop views
+DROP VIEW IF EXISTS user_dashboard_stats;
+
+-- Drop tables (in reverse order of dependencies)
+-- CASCADE will automatically drop dependent triggers
+DROP TABLE IF EXISTS user_settings CASCADE;
+DROP TABLE IF EXISTS grade_configs CASCADE;
+DROP TABLE IF EXISTS subjects CASCADE;
+DROP TABLE IF EXISTS semesters CASCADE;
+
+-- Drop functions (after tables/triggers that depend on them)
+DROP FUNCTION IF EXISTS get_semester_stats(UUID);
+DROP FUNCTION IF EXISTS calculate_user_cgpa(UUID);
+DROP FUNCTION IF EXISTS update_updated_at_column();
+
+-- ========================================
+-- CREATE TABLES
+-- ========================================
 
 -- Semesters table
 CREATE TABLE IF NOT EXISTS semesters (
@@ -56,7 +97,12 @@ CREATE TABLE IF NOT EXISTS grade_configs (
     CONSTRAINT unique_grade_per_user UNIQUE (user_id, name)
 );
 
-COMMENT ON TAIF NOT EXISTS user_settings (
+COMMENT ON TABLE grade_configs IS 'User-defined grade configurations for grading system';
+COMMENT ON COLUMN grade_configs.points IS 'Grade points value (0-10 scale)';
+COMMENT ON COLUMN grade_configs.is_default IS 'Whether this is a system default grade';
+
+-- User settings table
+CREATE TABLE IF NOT EXISTS user_settings (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE UNIQUE,
     theme VARCHAR(10) DEFAULT 'auto' CHECK (theme IN ('light', 'dark', 'auto')),
@@ -67,12 +113,7 @@ COMMENT ON TAIF NOT EXISTS user_settings (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
-COMMENT ON TABLE user_settings IS 'User-specific application settings and preferences'   default_grading_system VARCHAR(20) DEFAULT '10-point',
-    decimal_precision INTEGER DEFAULT 2,
-    include_failed_courses BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
+COMMENT ON TABLE user_settings IS 'User-specific application settings and preferences';
 
 -- Row Level Security (RLS) Policies
 
@@ -180,6 +221,9 @@ CREATE TRIGGER update_subjects_updated_at BEFORE UPDATE ON subjects
 CREATE TRIGGER update_grade_configs_updated_at BEFORE UPDATE ON grade_configs
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_user_settings_updated_at BEFORE UPDATE ON user_settings
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- Helper function to calculate CGPA across all semesters for a user
 CREATE OR REPLACE FUNCTION calculate_user_cgpa(p_user_id UUID)
 RETURNS DECIMAL(4, 2) AS $$
@@ -252,7 +296,5 @@ COMMENT ON VIEW user_dashboard_stats IS 'Aggregated statistics for user dashboar
 -- Grant permissions on the view
 GRANT SELECT ON user_dashboard_stats TO authenticated;
 
--- Create RLS policy for the view
-CREATE POLICY "Users can view their own stats" ON user_dashboard_stats
-    FOR SELECT USING (auth.uid() = user_id);CREATE TRIGGER update_user_settings_updated_at BEFORE UPDATE ON user_settings
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Note: Views don't support RLS policies directly. 
+-- Security is enforced through the underlying tables (semesters, subjects).

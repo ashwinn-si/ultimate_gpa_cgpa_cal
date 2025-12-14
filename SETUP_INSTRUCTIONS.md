@@ -14,7 +14,7 @@ You're seeing the error because the database tables haven't been created yet. Fo
    - **anon/public key** (long string starting with `eyJ...`)
    - **service_role key** (another long string)
 
-3. Open `.env.local` in this project
+3. Open `.env` in this project
 4. Replace `your-anon-key-here` with your actual anon key
 5. Replace `your-service-role-key-here` with your actual service role key
 
@@ -71,8 +71,8 @@ npm run dev
 
 1. Make sure you ran the ENTIRE SQL script (all tables)
 2. Check if tables exist in Supabase Table Editor
-3. Make sure your `.env.local` has correct API keys
-4. Restart the dev server after updating `.env.local`
+3. Make sure your `.env` has correct API keys
+4. Restart the dev server after updating `.env`
 
 ### Can't see email verification?
 
