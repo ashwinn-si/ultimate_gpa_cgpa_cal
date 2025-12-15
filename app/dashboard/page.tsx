@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Plus, TrendingUp, BookOpen, Award, Target, GraduationCap, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { calculateCGPA, getPerformanceLevel } from '@/lib/utils/calculations'
+import { PageAnimationWrapper, AnimatedHeader, AnimatedSection, AnimatedStatsGrid, AnimatedGrid, AnimatedCard } from '@/components/dashboard/PageAnimationWrapper'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -49,39 +50,41 @@ export default async function DashboardPage() {
     : 0
 
   return (
-    <div className="space-y-8">
+    <PageAnimationWrapper>
       {/* Header with Gradient */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-purple-500/20 to-blue-500/20 border border-primary/20 p-8 shadow-lg">
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-primary/10 rounded-lg backdrop-blur-sm">
-              <GraduationCap className="h-8 w-8 text-primary" />
+      <AnimatedHeader>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-purple-500/20 to-blue-500/20 border border-primary/20 p-8 shadow-lg">
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-primary/10 rounded-lg backdrop-blur-sm">
+                <GraduationCap className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                  Dashboard
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  Welcome back! Track your academic excellence
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-                Dashboard
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Welcome back! Track your academic excellence
-              </p>
+            <div className="mt-6">
+              <Link href="/dashboard/semester/new">
+                <Button size="lg" className="shadow-md hover:shadow-lg transition-shadow">
+                  <Plus className="mr-2 h-5 w-5" />
+                  Add New Semester
+                </Button>
+              </Link>
             </div>
           </div>
-          <div className="mt-6">
-            <Link href="/dashboard/semester/new">
-              <Button size="lg" className="shadow-md hover:shadow-lg transition-shadow">
-                <Plus className="mr-2 h-5 w-5" />
-                Add New Semester
-              </Button>
-            </Link>
+          <div className="absolute top-0 right-0 -mt-4 -mr-4 opacity-10">
+            <Sparkles className="h-64 w-64" />
           </div>
         </div>
-        <div className="absolute top-0 right-0 -mt-4 -mr-4 opacity-10">
-          <Sparkles className="h-64 w-64" />
-        </div>
-      </div>
+      </AnimatedHeader>
 
       {/* Enhanced Stats Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <AnimatedStatsGrid>
         <Card className="border-primary/20 shadow-md hover:shadow-lg transition-all hover:scale-[1.02] bg-gradient-to-br from-card to-card/50">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -168,100 +171,125 @@ export default async function DashboardPage() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </AnimatedStatsGrid>
 
       {/* Semesters List */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold">Your Semesters</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Sorted by year and name • {allSemesters.length} total
-            </p>
+      <AnimatedSection delay={0.3}>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Your Semesters</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Sorted by year and name • {allSemesters.length} total
+              </p>
+            </div>
           </div>
-        </div>
 
-        {allSemesters.length === 0 ? (
-          <Card className="border-dashed border-2">
-            <CardContent className="py-16">
-              <div className="text-center">
-                <div className="mx-auto w-fit p-4 bg-primary/10 rounded-full mb-4">
-                  <BookOpen className="h-12 w-12 text-primary" />
+          {allSemesters.length === 0 ? (
+            <Card className="border-dashed border-2">
+              <CardContent className="py-16">
+                <div className="text-center">
+                  <div className="mx-auto w-fit p-4 bg-primary/10 rounded-full mb-4">
+                    <BookOpen className="h-12 w-12 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">No semesters yet</h3>
+                  <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                    Start your academic journey by adding your first semester and tracking your performance
+                  </p>
+                  <Link href="/dashboard/semester/new">
+                    <Button size="lg" className="shadow-md">
+                      <Plus className="mr-2 h-5 w-5" />
+                      Add Your First Semester
+                    </Button>
+                  </Link>
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No semesters yet</h3>
-                <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-                  Start your academic journey by adding your first semester and tracking your performance
-                </p>
-                <Link href="/dashboard/semester/new">
-                  <Button size="lg" className="shadow-md">
-                    <Plus className="mr-2 h-5 w-5" />
-                    Add Your First Semester
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {allSemesters.map((semester: any) => {
-              const semesterPerformance = getPerformanceLevel(semester.gpa || 0)
-              return (
-                <Link key={semester.id} href={`/dashboard/semester/${semester.id}`}>
-                  <Card className="group hover:border-primary/50 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer overflow-hidden relative">
-                    <div className={`absolute top-0 left-0 right-0 h-1.5 ${semesterPerformance.bgColor} opacity-0 group-hover:opacity-100 transition-opacity`}></div>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle className="text-xl group-hover:text-primary transition-colors">
-                            {semester.name}
-                          </CardTitle>
-                          <CardDescription className="mt-1.5 flex items-center gap-2">
-                            <span className="font-medium">{semester.year}</span>
-                            {semester.term && (
-                              <>
-                                <span className="text-muted-foreground/50">•</span>
-                                <span className="capitalize">{semester.term}</span>
-                              </>
-                            )}
-                          </CardDescription>
-                        </div>
-                        <div className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${semesterPerformance.bgColor} ${semesterPerformance.color}`}>
-                          {semester.gpa?.toFixed(2) || 'N/A'}
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <p className="text-xs text-muted-foreground">GPA Score</p>
-                          <p className={`text-2xl font-bold ${semesterPerformance.color}`}>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+              {allSemesters.map((semester: any) => {
+                const semesterPerformance = getPerformanceLevel(semester.gpa || 0)
+
+                // Calculate semester-specific credits
+                let semesterTotalCredits = 0
+                let semesterCreditScored = 0
+                if (semester.subjects && semester.subjects.length > 0) {
+                  for (const subject of semester.subjects) {
+                    const gradePoints = subject.grade_points ?? 0
+                    const credits = subject.credits ?? 0
+                    semesterTotalCredits += credits * 10
+                    semesterCreditScored += gradePoints * credits
+                  }
+                }
+
+                return (
+                  <Link key={semester.id} href={`/dashboard/semester/${semester.id}`}>
+                    <Card className="group hover:border-primary/50 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer overflow-hidden relative">
+                      <div className={`absolute top-0 left-0 right-0 h-1.5 ${semesterPerformance.bgColor} opacity-0 group-hover:opacity-100 transition-opacity`}></div>
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <CardTitle className="text-xl group-hover:text-primary transition-colors">
+                              {semester.name}
+                            </CardTitle>
+                            <CardDescription className="mt-1.5 flex items-center gap-2">
+                              <span className="font-medium">{semester.year}</span>
+                              {semester.term && (
+                                <>
+                                  <span className="text-muted-foreground/50">•</span>
+                                  <span className="capitalize">{semester.term}</span>
+                                </>
+                              )}
+                            </CardDescription>
+                          </div>
+                          <div className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${semesterPerformance.bgColor} ${semesterPerformance.color}`}>
                             {semester.gpa?.toFixed(2) || 'N/A'}
-                          </p>
+                          </div>
                         </div>
-                        <div className="space-y-1">
-                          <p className="text-xs text-muted-foreground">Credits</p>
-                          <p className="text-2xl font-bold text-blue-500">
-                            {semester.total_credits || 0}
-                          </p>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">GPA Score</p>
+                            <p className={`text-2xl font-bold ${semesterPerformance.color}`}>
+                              {semester.gpa?.toFixed(2) || 'N/A'}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">Subjects</p>
+                            <p className="text-2xl font-bold text-blue-500">
+                              {semester.subjects?.length || 0}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <BookOpen className="h-4 w-4" />
-                          <span>{semester.subjects?.length || 0} subjects</span>
+                        <div className="mt-3 pt-3 border-t space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Total Credit</span>
+                            <span className="font-semibold text-purple-500">{semesterTotalCredits.toFixed(1)}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Credit Scored</span>
+                            <span className="font-semibold text-green-500">{semesterCreditScored.toFixed(1)}</span>
+                          </div>
                         </div>
-                        <div className="text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                          View Details →
+                        <div className="mt-3 pt-3 border-t flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <BookOpen className="h-4 w-4" />
+                            <span>{semester.total_credits || 0} credits</span>
+                          </div>
+                          <div className="text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                            View Details →
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              )
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </AnimatedSection>
+    </PageAnimationWrapper>
   )
 }

@@ -9,6 +9,7 @@ import { EditSubjectButton } from '@/components/subject/EditSubjectButton'
 import { DeleteSubjectButton } from '@/components/subject/DeleteSubjectButton'
 import { DeleteSemesterButton } from '@/components/semester/DeleteSemesterButton'
 import { EditSemesterButton } from '@/components/semester/EditSemesterButton'
+import { PageAnimationWrapper, AnimatedHeader, AnimatedSection } from '@/components/dashboard/PageAnimationWrapper'
 
 interface SemesterDetailPageProps {
   params: Promise<{
@@ -50,94 +51,140 @@ export default async function SemesterDetailPage({ params }: SemesterDetailPageP
     creditScored += gradePoints * credits  // Credit scored = grade_points × credits
   }
 
+  const performanceLevel = gpa >= 8.5 ? 'Excellent' : gpa >= 7.0 ? 'Good' : gpa >= 6.0 ? 'Average' : 'Needs Improvement'
+  const performanceColor = gpa >= 8.5 ? 'text-success' : gpa >= 7.0 ? 'text-info' : gpa >= 6.0 ? 'text-warning' : 'text-error'
+  const performanceBg = gpa >= 8.5 ? 'from-green-500/20 to-emerald-500/20' : gpa >= 7.0 ? 'from-blue-500/20 to-cyan-500/20' : gpa >= 6.0 ? 'from-yellow-500/20 to-orange-500/20' : 'from-red-500/20 to-pink-500/20'
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <Link href="/dashboard/semesters" className="text-sm text-muted-foreground hover:text-foreground mb-2 inline-flex items-center">
-            <ArrowLeft className="mr-1 h-3 w-3" />
+    <PageAnimationWrapper>
+      {/* Enhanced Header with Gradient */}
+      <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${performanceBg} border border-primary/20 p-6 shadow-lg`}>
+        <div className="relative z-10">
+          <Link href="/dashboard/semesters" className="text-sm text-muted-foreground hover:text-foreground mb-3 inline-flex items-center group">
+            <ArrowLeft className="mr-1 h-3 w-3 group-hover:-translate-x-1 transition-transform" />
             Back to Semesters
           </Link>
-          <h1 className="text-3xl font-bold">{semester.name}</h1>
-          <p className="text-muted-foreground">
-            {semester.year} {semester.term && `• ${semester.term}`}
-          </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">{semester.name}</h1>
+              <p className="text-muted-foreground text-lg">
+                {semester.year} {semester.term && `• ${semester.term}`}
+              </p>
+              <div className={`inline-flex items-center mt-3 px-3 py-1.5 rounded-full text-sm font-semibold ${performanceColor} bg-background/80 backdrop-blur-sm`}>
+                {performanceLevel} • {gpa.toFixed(2)} GPA
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <EditSemesterButton
+                semesterId={id}
+                currentName={semester.name}
+                variant="outline"
+              />
+              <DeleteSemesterButton
+                semesterId={id}
+                semesterName={semester.name}
+                subjectCount={subjects.length}
+                variant="outline"
+              />
+              <AddSubjectButton semesterId={id} />
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <EditSemesterButton
-            semesterId={id}
-            currentName={semester.name}
-            variant="outline"
-          />
-          <DeleteSemesterButton
-            semesterId={id}
-            semesterName={semester.name}
-            subjectCount={subjects.length}
-            variant="outline"
-          />
-          <AddSubjectButton semesterId={id} />
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 opacity-10">
+          <Award className="h-48 w-48" />
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Semester GPA</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+      {/* Enhanced Stats Cards */}
+      <div className="grid gap-5 md:grid-cols-3">
+        <Card className="border-primary/20 shadow-md hover:shadow-lg transition-all hover:scale-[1.02] bg-gradient-to-br from-card to-card/50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Semester GPA</CardTitle>
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <TrendingUp className="h-5 w-5 text-primary" />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{gpa.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              {creditScored.toFixed(1)} ÷ {totalCredits.toFixed(1)}
-            </p>
+            <div className="space-y-2">
+              <div className={`text-4xl font-bold ${performanceColor}`}>
+                {gpa.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {creditScored.toFixed(1)} ÷ {totalCredits.toFixed(1)} credits
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Credits</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+        <Card className="border-purple-500/20 shadow-md hover:shadow-lg transition-all hover:scale-[1.02] bg-gradient-to-br from-card to-card/50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Credits</CardTitle>
+              <div className="p-2 bg-purple-500/10 rounded-lg">
+                <BookOpen className="h-5 w-5 text-purple-500" />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalCredits.toFixed(1)}</div>
-            <p className="text-xs text-muted-foreground">
-              {subjects.length} subjects × 10
-            </p>
+            <div className="space-y-2">
+              <div className="text-4xl font-bold text-purple-500">
+                {totalCredits.toFixed(1)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {subjects.length} subjects × 10
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Credit Scored</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
+        <Card className="border-green-500/20 shadow-md hover:shadow-lg transition-all hover:scale-[1.02] bg-gradient-to-br from-card to-card/50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Credit Scored</CardTitle>
+              <div className="p-2 bg-green-500/10 rounded-lg">
+                <Award className="h-5 w-5 text-green-500" />
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{creditScored.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">
-              Grade points × credits
-            </p>
+            <div className="space-y-2">
+              <div className="text-4xl font-bold text-green-500">
+                {creditScored.toFixed(1)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Grade points × credits
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Subjects Table */}
-      <Card>
+      {/* Enhanced Subjects Table */}
+      <Card className="shadow-md">
         <CardHeader>
-          <CardTitle>Subjects</CardTitle>
-          <CardDescription>
-            {subjects.length === 0
-              ? 'No subjects added yet'
-              : `${subjects.length} subject${subjects.length !== 1 ? 's' : ''} in this semester`}
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl">Subjects</CardTitle>
+              <CardDescription className="mt-1">
+                {subjects.length === 0
+                  ? 'No subjects added yet'
+                  : `${subjects.length} subject${subjects.length !== 1 ? 's' : ''} in this semester`}
+              </CardDescription>
+            </div>
+            {subjects.length > 0 && <AddSubjectButton semesterId={id} variant="outline" />}
+          </div>
         </CardHeader>
         <CardContent>
           {subjects.length === 0 ? (
-            <div className="text-center py-8">
-              <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground mb-4">
-                No subjects added yet. Add your first subject to start tracking your grades.
+            <div className="text-center py-12 border-2 border-dashed rounded-lg">
+              <div className="mx-auto w-fit p-4 bg-primary/10 rounded-full mb-4">
+                <BookOpen className="h-12 w-12 text-primary" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">No subjects yet</h3>
+              <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                Add your first subject to start tracking your grades and calculating your GPA.
               </p>
               <AddSubjectButton semesterId={id} />
             </div>
@@ -187,6 +234,7 @@ export default async function SemesterDetailPage({ params }: SemesterDetailPageP
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageAnimationWrapper>
+
   )
 }

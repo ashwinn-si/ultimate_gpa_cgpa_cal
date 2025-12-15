@@ -52,7 +52,7 @@ export default function Sidebar() {
 
   return (
     <motion.div
-      className="hidden md:flex flex-col w-64 border-r bg-card/50 backdrop-blur-sm"
+      className="hidden md:flex flex-col w-64 border-r bg-card/50 backdrop-blur-sm h-screen overflow-y-auto"
       initial="hidden"
       animate="visible"
       variants={sidebarVariants}
