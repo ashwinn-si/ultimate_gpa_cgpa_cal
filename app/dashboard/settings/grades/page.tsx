@@ -7,6 +7,18 @@ import { AddGradeButton } from '@/components/grades/AddGradeButton'
 import { EditGradeButton } from '@/components/grades/EditGradeButton'
 import { DeleteGradeButton } from '@/components/grades/DeleteGradeButton'
 import { PageAnimationWrapper, AnimatedHeader, AnimatedSection } from '@/components/dashboard/PageAnimationWrapper'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Grade System | GPA Tracker',
+  description: 'Configure and manage your grading system. Set up grade names, point values, and customize your grading scale to match your institution.',
+  keywords: ['grade system', 'grading scale', 'grade configuration', 'grade points', 'custom grades'],
+  openGraph: {
+    title: 'Grade System | GPA Tracker',
+    description: 'Configure and manage your grading system and scale.',
+    type: 'website',
+  },
+}
 
 export default async function GradesPage() {
   const gradeConfigs = await getGradeConfigs()

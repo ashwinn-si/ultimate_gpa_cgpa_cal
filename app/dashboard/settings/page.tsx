@@ -6,6 +6,18 @@ import { Palette, Award, User, LogOut, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/shared/ThemeToggle'
 import { PageAnimationWrapper, AnimatedHeader, AnimatedSection } from '@/components/dashboard/PageAnimationWrapper'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Settings | GPA Tracker',
+  description: 'Customize your GPA Tracker experience. Manage your account, configure grade system, adjust theme preferences, and personalize your settings.',
+  keywords: ['settings', 'account settings', 'grade configuration', 'theme settings', 'user preferences'],
+  openGraph: {
+    title: 'Settings | GPA Tracker',
+    description: 'Customize your GPA Tracker experience and manage your preferences.',
+    type: 'website',
+  },
+}
 
 export default async function SettingsPage() {
   const supabase = await createClient()

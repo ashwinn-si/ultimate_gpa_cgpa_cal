@@ -6,6 +6,18 @@ import { CGPACard } from '@/components/dashboard/CGPACard'
 import { StatsCard } from '@/components/dashboard/StatsCard'
 import { Award, TrendingUp, Target } from 'lucide-react'
 import { PageAnimationWrapper, AnimatedHeader, AnimatedSection, AnimatedStatsGrid } from '@/components/dashboard/PageAnimationWrapper'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Analytics | GPA Tracker',
+  description: 'Visualize your academic performance with detailed analytics. View GPA trends, grade distribution, performance metrics, and comprehensive charts.',
+  keywords: ['gpa analytics', 'grade analytics', 'academic performance', 'gpa trends', 'grade distribution', 'performance charts'],
+  openGraph: {
+    title: 'Analytics | GPA Tracker',
+    description: 'Visualize your academic performance with detailed analytics and charts.',
+    type: 'website',
+  },
+}
 
 export default async function AnalyticsPage() {
   const analytics = await getAnalytics()

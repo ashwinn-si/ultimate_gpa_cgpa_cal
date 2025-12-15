@@ -5,6 +5,18 @@ import { Plus, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { DeleteSemesterButton } from '@/components/semester/DeleteSemesterButton'
 import { PageAnimationWrapper, AnimatedHeader, AnimatedSection } from '@/components/dashboard/PageAnimationWrapper'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'All Semesters | GPA Tracker',
+  description: 'View and manage all your academic semesters. Track GPA, credits, and subjects for each semester. Create, edit, and organize your semester data.',
+  keywords: ['semesters', 'semester management', 'academic semesters', 'gpa by semester', 'semester grades'],
+  openGraph: {
+    title: 'All Semesters | GPA Tracker',
+    description: 'View and manage all your academic semesters in one place.',
+    type: 'website',
+  },
+}
 
 export default async function SemestersPage() {
   const semesters = await getSemesters()

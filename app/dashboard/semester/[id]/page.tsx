@@ -10,11 +10,34 @@ import { DeleteSubjectButton } from '@/components/subject/DeleteSubjectButton'
 import { DeleteSemesterButton } from '@/components/semester/DeleteSemesterButton'
 import { EditSemesterButton } from '@/components/semester/EditSemesterButton'
 import { PageAnimationWrapper, AnimatedHeader, AnimatedSection } from '@/components/dashboard/PageAnimationWrapper'
+import { Metadata } from 'next'
 
 interface SemesterDetailPageProps {
   params: Promise<{
     id: string
   }>
+}
+
+export async function generateMetadata({ params }: SemesterDetailPageProps): Promise<Metadata> {
+  const { id } = await params
+  try {
+    const semester = await getSemesterById(id) as any
+    return {
+      title: `${semester.name} | GPA Tracker`,
+      description: `View and manage subjects for ${semester.name} (${semester.year}). Track grades, credits, and GPA for this semester.`,
+      keywords: ['semester detail', 'semester subjects', 'semester gpa', 'subject management'],
+      openGraph: {
+        title: `${semester.name} | GPA Tracker`,
+        description: `View and manage subjects for ${semester.name} (${semester.year}).`,
+        type: 'website',
+      },
+    }
+  } catch (error) {
+    return {
+      title: 'Semester Details | GPA Tracker',
+      description: 'View semester details, subjects, and grades.',
+    }
+  }
 }
 
 export default async function SemesterDetailPage({ params }: SemesterDetailPageProps) {

@@ -7,6 +7,7 @@ import { BarChart3, Calculator, TrendingUp, Award, BookOpen, Github, Heart } fro
 import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Head from 'next/head'
 
 const container = {
   hidden: { opacity: 0 },

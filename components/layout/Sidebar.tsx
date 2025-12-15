@@ -58,22 +58,24 @@ export default function Sidebar() {
       variants={sidebarVariants}
     >
       <motion.div className="px-6 py-8 border-b" variants={itemVariants}>
-        <motion.div
-          className="flex items-center gap-3"
-          whileHover={{ scale: 1.03 }}
-          transition={{ type: "spring", stiffness: 400 }}
-        >
+        <Link href="/" className="block">
           <motion.div
-            className="p-2 bg-primary/10 rounded-lg"
-            whileHover={{ rotate: 360 }}
-            transition={{ duration: 0.6 }}
+            className="flex items-center gap-3 cursor-pointer"
+            whileHover={{ scale: 1.03 }}
+            transition={{ type: "spring", stiffness: 400 }}
           >
-            <Calculator className="h-6 w-6 text-primary" />
+            <motion.div
+              className="p-2 bg-primary/10 rounded-lg"
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.6 }}
+            >
+              <Calculator className="h-6 w-6 text-primary" />
+            </motion.div>
+            <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+              GPA Tracker
+            </span>
           </motion.div>
-          <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-            GPA Tracker
-          </span>
-        </motion.div>
+        </Link>
       </motion.div>
 
       <motion.nav className="flex-1 px-4 py-6 space-y-1.5" variants={itemVariants}>

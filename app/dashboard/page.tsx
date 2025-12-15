@@ -5,6 +5,18 @@ import { Plus, TrendingUp, BookOpen, Award, Target, GraduationCap, Sparkles } fr
 import Link from 'next/link'
 import { calculateCGPA, getPerformanceLevel } from '@/lib/utils/calculations'
 import { PageAnimationWrapper, AnimatedHeader, AnimatedSection, AnimatedStatsGrid, AnimatedGrid, AnimatedCard } from '@/components/dashboard/PageAnimationWrapper'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Dashboard | GPA Tracker',
+  description: 'View your academic progress, CGPA, and semester performance at a glance. Track your grades and monitor your academic journey.',
+  keywords: ['gpa tracker', 'cgpa calculator', 'academic dashboard', 'grade tracking', 'semester grades'],
+  openGraph: {
+    title: 'Dashboard | GPA Tracker',
+    description: 'View your academic progress, CGPA, and semester performance at a glance.',
+    type: 'website',
+  },
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
