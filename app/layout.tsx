@@ -13,8 +13,8 @@ export const metadata: Metadata = {
   },
   description: "Free online GPA and CGPA calculator. Track your academic performance across semesters with beautiful visualizations, analytics, and grade management. Perfect for students managing their academic journey.",
   keywords: ['gpa calculator', 'cgpa calculator', 'grade tracker', 'academic performance', 'semester grades', 'gpa tracking', 'student grades', 'grade point average'],
-  authors: [{ name: 'Ashwin Singh', url: 'https://www.ashwinsi.in' }],
-  creator: 'Ashwin Singh',
+  authors: [{ name: 'Ashwin S I', url: 'https://www.ashwinsi.in' }],
+  creator: 'Ashwin S I',
   metadataBase: new URL('https://gpa-cgpa-cal-ultimate.ashwinsi.in'),
   icons: {
     icon: [
