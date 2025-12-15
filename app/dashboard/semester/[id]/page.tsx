@@ -8,6 +8,7 @@ import { AddSubjectButton } from '@/components/subject/AddSubjectButton'
 import { EditSubjectButton } from '@/components/subject/EditSubjectButton'
 import { DeleteSubjectButton } from '@/components/subject/DeleteSubjectButton'
 import { DeleteSemesterButton } from '@/components/semester/DeleteSemesterButton'
+import { EditSemesterButton } from '@/components/semester/EditSemesterButton'
 
 interface SemesterDetailPageProps {
   params: Promise<{
@@ -64,6 +65,11 @@ export default async function SemesterDetailPage({ params }: SemesterDetailPageP
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <EditSemesterButton
+            semesterId={id}
+            currentName={semester.name}
+            variant="outline"
+          />
           <DeleteSemesterButton
             semesterId={id}
             semesterName={semester.name}
