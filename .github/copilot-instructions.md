@@ -1213,11 +1213,294 @@ if (existingGrades && existingGrades.length > 0) {
 />
 ```
 
+## Animations with Framer Motion
+
+The application uses **Framer Motion** for smooth, performant animations throughout the UI. All animations are GPU-accelerated and respect user motion preferences.
+
+### Animation Patterns
+
+#### Container + Item Pattern (Stagger Effects)
+Use for lists, grids, or any group of elements that should animate sequentially:
+
+```typescript
+import { motion } from 'framer-motion'
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,  // Delay between each child
+      delayChildren: 0.2      // Initial delay before first child
+    }
+  }
+}
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+}
+
+<motion.div variants={container} initial="hidden" animate="show">
+  {items.map(item => (
+    <motion.div key={item.id} variants={item}>
+      {/* Content */}
+    </motion.div>
+  ))}
+</motion.div>
+```
+
+#### Hover Effects
+Standard hover patterns used throughout the app:
+
+```typescript
+// Card hover - lift and scale
+<motion.div
+  whileHover={{ y: -5, scale: 1.02 }}
+  transition={{ type: "spring", stiffness: 300 }}
+>
+  {/* Card content */}
+</motion.div>
+
+// Button hover - scale only
+<motion.div
+  whileHover={{ scale: 1.05 }}
+  whileTap={{ scale: 0.95 }}
+>
+  <Button>Click me</Button>
+</motion.div>
+
+// Icon rotation on hover
+<motion.div
+  whileHover={{ rotate: 360 }}
+  transition={{ duration: 0.6 }}
+>
+  <Icon />
+</motion.div>
+```
+
+#### Entrance Animations
+Standard entrance patterns for sections and components:
+
+```typescript
+// Fade in from bottom
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.5, delay: 0.2 }}
+>
+  {/* Content */}
+</motion.div>
+
+// Slide in from left (sidebar, modals)
+<motion.div
+  initial={{ x: -100, opacity: 0 }}
+  animate={{ x: 0, opacity: 1 }}
+  transition={{ duration: 0.3 }}
+>
+  {/* Content */}
+</motion.div>
+
+// Scale + fade (emphasis)
+<motion.div
+  initial={{ opacity: 0, scale: 0.9 }}
+  animate={{ opacity: 1, scale: 1 }}
+  transition={{ duration: 0.5 }}
+>
+  {/* Content */}
+</motion.div>
+```
+
+#### Number Counter Animation
+For stats and metrics that should count up:
+
+```typescript
+const [displayValue, setDisplayValue] = useState(0)
+const targetValue = 42
+
+useEffect(() => {
+  const duration = 1000 // 1 second
+  const steps = 30
+  const increment = targetValue / steps
+  let currentStep = 0
+
+  const timer = setInterval(() => {
+    currentStep++
+    if (currentStep <= steps) {
+      setDisplayValue(increment * currentStep)
+    } else {
+      setDisplayValue(targetValue)
+      clearInterval(timer)
+    }
+  }, duration / steps)
+
+  return () => clearInterval(timer)
+}, [targetValue])
+```
+
+### Reusable Animation Components
+
+Located in `components/dashboard/DashboardAnimations.tsx`:
+
+```typescript
+import { DashboardAnimations, AnimatedSection, AnimatedCard, StaggerContainer } from '@/components/dashboard/DashboardAnimations'
+
+// Wrap entire page for consistent animations
+<DashboardAnimations>
+  {/* Page content */}
+</DashboardAnimations>
+
+// Individual sections with custom delay
+<AnimatedSection delay={0.3}>
+  {/* Section content */}
+</AnimatedSection>
+
+// Cards with hover effects
+<AnimatedCard index={0}>
+  <Card>{/* Card content */}</Card>
+</AnimatedCard>
+
+// Stagger lists
+<StaggerContainer>
+  {items.map((item, i) => (
+    <AnimatedCard key={item.id} index={i}>
+      {/* Item content */}
+    </AnimatedCard>
+  ))}
+</StaggerContainer>
+```
+
+### Component-Specific Animations
+
+#### Homepage (`app/page.tsx`)
+- Header slides down from top on mount
+- Logo scales on hover
+- Hero section uses staggered entrance for title → description → buttons
+- Feature cards appear sequentially with 0.1s stagger
+- All cards lift up and scale on hover
+- CTA section has delayed entrance
+
+#### Sidebar (`components/layout/Sidebar.tsx`)
+- Entire sidebar slides in from left on mount
+- Logo section has hover scale effect
+- Calculator icon rotates 360° on hover
+- Navigation items:
+  - Staggered entrance (0.1s per item)
+  - Slide right on hover
+  - Icons scale + rotate on hover
+- Heart icon has infinite pulsing animation: `animate={{ scale: [1, 1.2, 1] }}`
+
+#### StatsCard (`components/dashboard/StatsCard.tsx`)
+- Entrance: fade + slide up
+- Icon: rotates from -180° to 0° with spring
+- Value: animated counter that counts from 0 to target
+- Hover: lifts up and scales
+- Trend indicators slide in from left
+
+### Animation Best Practices
+
+1. **Always use spring transitions for hover effects**: More natural feel
+   ```typescript
+   transition={{ type: "spring", stiffness: 300 }}
+   ```
+
+2. **Use GPU-accelerated properties**: `transform` and `opacity` only
+   - ✅ `x`, `y`, `scale`, `rotate`, `opacity`
+   - ❌ `width`, `height`, `margin`, `padding`
+
+3. **Stagger for lists**: Adds polish and helps users track elements
+   ```typescript
+   transition={{ staggerChildren: 0.1 }}
+   ```
+
+4. **Delay entrance animations**: Prevents overwhelming users on page load
+   ```typescript
+   transition={{ delay: 0.2 }}
+   ```
+
+5. **Respect motion preferences**: Framer Motion automatically handles this
+   ```typescript
+   // No code needed - handled automatically by Framer Motion
+   ```
+
+6. **Use variants for complex animations**: Cleaner than inline props
+   ```typescript
+   const variants = { hidden: {...}, visible: {...} }
+   <motion.div variants={variants} initial="hidden" animate="visible">
+   ```
+
+7. **Keep animations subtle**: 5-10px movement, 1.02-1.05x scale
+   - ✅ `whileHover={{ y: -5, scale: 1.02 }}`
+   - ❌ `whileHover={{ y: -50, scale: 1.5 }}`
+
+8. **Animate icons separately from containers**: More engaging
+   ```typescript
+   <motion.div>
+     <motion.div whileHover={{ rotate: 360 }}>
+       <Icon />
+     </motion.div>
+   </motion.div>
+   ```
+
+### When to Use Animations
+
+**Always animate:**
+- Page/section entrances
+- Card hover states
+- Button interactions
+- Modal/dialog appearances
+- List items (with stagger)
+- Stats/numbers (counter animation)
+
+**Never animate:**
+- Text input fields (distracting)
+- Form validation errors (should be instant)
+- Critical actions (can delay user)
+- High-frequency updates (performance)
+
+### Performance Considerations
+
+- Animations run at 60fps on modern devices
+- Use `will-change` sparingly (Framer Motion handles this)
+- Avoid animating expensive properties (width, height, etc.)
+- Keep animation durations under 600ms
+- Disable animations for users who prefer reduced motion (automatic)
+
+### Converting Server to Client Components for Animations
+
+When you need to add animations to a Server Component:
+
+```typescript
+// Before: Server Component
+export default async function Page() {
+  const data = await fetchData()
+  return <div>{/* content */}</div>
+}
+
+// After: Split into Server + Client
+// page.tsx (Server Component)
+export default async function Page() {
+  const data = await fetchData()
+  return <ClientWrapper data={data} />
+}
+
+// ClientWrapper.tsx (Client Component)
+'use client'
+export function ClientWrapper({ data }) {
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      {/* content */}
+    </motion.div>
+  )
+}
+```
+
 ## UI/UX Enhancements
 
 ### Footer Attribution
 - Both Sidebar and homepage footer include "Made with ❤️ by ashwinsi" link
 - Uses Heart icon from Lucide (red and filled)
+- Heart has pulsing animation in sidebar: `animate={{ scale: [1, 1.2, 1] }}`
 - Links to https://www.ashwinsi.in
 - Opens in new tab with proper security attributes (`target="_blank"` and `rel="noopener noreferrer"`)
 - Includes hover effects that transition text color to primary
