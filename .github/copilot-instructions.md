@@ -62,6 +62,7 @@ This is a **Next.js 14+ web application** built with **TypeScript**, **TailwindC
 │   │   ├── SemesterGrid.tsx
 │   │   ├── SemesterForm.tsx
 │   │   ├── SemesterDetail.tsx
+│   │   ├── EditSemesterButton.tsx
 │   │   └── DeleteSemesterButton.tsx
 │   ├── subject/
 │   │   ├── SubjectList.tsx
@@ -1184,3 +1185,41 @@ if (existingGrades && existingGrades.length > 0) {
 - ThemeProvider wraps the entire app in `app/layout.tsx`
 - ThemeToggle component in settings page allows users to switch themes
 - Theme preference is persisted in localStorage
+
+## Semester Management
+
+### Semester CRUD Operations
+- **Create**: `createSemester()` - creates a new semester with name, year, and optional term
+- **Read**: `getSemesters()` - fetches all semesters ordered by year and order
+- **Read Single**: `getSemesterById(id)` - fetches a single semester with all subjects
+- **Update**: `updateSemester(id, data)` - updates semester details (name, year, term)
+- **Delete**: `deleteSemester(id)` - deletes semester and all associated subjects
+
+### Edit Semester Feature
+- Users can edit semester name via `EditSemesterButton` component
+- Button appears on the semester detail page alongside Delete and Add Subject buttons
+- Opens a dialog with a simple form to update the semester name
+- Validates that the name is not empty
+- No database structure changes required - uses existing `updateSemester` action
+- Shows loading state and toast notifications for success/error
+- Automatically refreshes the page after successful update
+
+### Usage Example
+```typescript
+<EditSemesterButton
+  semesterId={id}
+  currentName={semester.name}
+  variant="outline"
+/>
+```
+
+## UI/UX Enhancements
+
+### Footer Attribution
+- Both Sidebar and homepage footer include "Made with ❤️ by ashwinsi" link
+- Uses Heart icon from Lucide (red and filled)
+- Links to https://www.ashwinsi.in
+- Opens in new tab with proper security attributes (`target="_blank"` and `rel="noopener noreferrer"`)
+- Includes hover effects that transition text color to primary
+- **Sidebar**: Located below the "Track Your Success" card at the bottom
+- **Homepage**: Located in the footer below the copyright text

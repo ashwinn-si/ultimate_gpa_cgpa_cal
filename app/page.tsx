@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { BarChart3, Calculator, TrendingUp, Award, BookOpen, Github } from 'lucide-react'
+import { BarChart3, Calculator, TrendingUp, Award, BookOpen, Github, Heart } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function HomePage() {
@@ -140,6 +140,16 @@ export default async function HomePage() {
       <footer className="border-t mt-16 py-8">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
           <p>&copy; 2024 CGPA Calculator. Built with Next.js and Supabase.</p>
+          <div className="mt-2">
+            <a
+              href="https://www.ashwinsi.in"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm hover:text-primary transition-colors"
+            >
+              Made with <Heart className="h-4 w-4 text-red-500 fill-red-500" /> by ashwinsi
+            </a>
+          </div>
         </div>
       </footer>
     </div>

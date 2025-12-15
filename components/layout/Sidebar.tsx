@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Home, BarChart3, Settings, BookOpen, Calculator } from 'lucide-react'
+import { Home, BarChart3, Settings, BookOpen, Calculator, Heart } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -79,6 +79,16 @@ export default function Sidebar() {
           <p className="text-xs text-muted-foreground leading-relaxed">
             Monitor your academic performance with detailed analytics and insights
           </p>
+        </div>
+        <div className="mt-4 text-center">
+          <a
+            href="https://www.ashwinsi.in"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            Made with <Heart className="h-3 w-3 text-red-500 fill-red-500" /> by ashwinsi
+          </a>
         </div>
       </div>
     </div>
