@@ -11,6 +11,7 @@ export default async function AnalyticsPage() {
 
   const {
     gpaBySemester,
+    cgpaBySemester,
     gradeDistribution,
     performanceMetrics,
     creditsByYear,
@@ -117,7 +118,7 @@ export default async function AnalyticsPage() {
 
       {/* Charts Section */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <GPATrendChart data={gpaBySemester} />
+        <GPATrendChart data={gpaBySemester} cgpaData={cgpaBySemester} />
         <GradeDistributionChart data={gradeDistribution} />
       </div>
 

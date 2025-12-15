@@ -6,6 +6,7 @@ import { calculateSemesterGPA } from '@/lib/utils/calculations'
 export interface AnalyticsData {
   gpaByYear: { year: number; gpa: number }[]
   gpaBySemester: { semesterName: string; gpa: number; year: number }[]
+  cgpaBySemester: { semesterName: string; cgpa: number; year: number }[]
   gradeDistribution: { grade: string; count: number; percentage: number }[]
   performanceMetrics: {
     cgpa: number
@@ -60,6 +61,7 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     return {
       gpaByYear: [],
       gpaBySemester: [],
+      cgpaBySemester: [],
       gradeDistribution: [],
       performanceMetrics: {
         cgpa: 0,
@@ -80,6 +82,34 @@ export async function getAnalytics(): Promise<AnalyticsData> {
     gpa: calculateSemesterGPA(semester.subjects || []),
     year: semester.year,
   }))
+
+  // Calculate cumulative CGPA by semester
+  const cgpaBySemester: { semesterName: string; cgpa: number; year: number }[] = []
+  let cumulativeCreditScored = 0
+  let cumulativeCredits = 0
+
+  for (let i = 0; i < typedSemesters.length; i++) {
+    const semester = typedSemesters[i]
+    
+    // Add current semester's data to cumulative totals
+    for (const subject of semester.subjects || []) {
+      const gradePoints = subject.grade_points ?? 0
+      const credits = subject.credits ?? 0
+      cumulativeCredits += credits * 10
+      cumulativeCreditScored += gradePoints * credits
+    }
+
+    // Calculate CGPA up to this semester
+    const cgpaUpToNow = cumulativeCredits > 0 
+      ? parseFloat(((cumulativeCreditScored / cumulativeCredits) * 10).toFixed(2)) 
+      : 0
+
+    cgpaBySemester.push({
+      semesterName: semester.name,
+      cgpa: cgpaUpToNow,
+      year: semester.year,
+    })
+  }
 
   // Calculate GPA by year (average GPA for each year)
   const gpaByYearMap = new Map<number, { total: number; count: number }>()
@@ -168,6 +198,7 @@ export async function getAnalytics(): Promise<AnalyticsData> {
   return {
     gpaByYear,
     gpaBySemester,
+    cgpaBySemester,
     gradeDistribution,
     performanceMetrics: {
       cgpa,

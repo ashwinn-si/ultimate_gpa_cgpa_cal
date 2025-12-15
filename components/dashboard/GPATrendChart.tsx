@@ -5,9 +5,10 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 interface GPATrendChartProps {
   data: { semesterName: string; gpa: number; year: number }[]
+  cgpaData?: { semesterName: string; cgpa: number; year: number }[]
 }
 
-export function GPATrendChart({ data }: GPATrendChartProps) {
+export function GPATrendChart({ data, cgpaData }: GPATrendChartProps) {
   if (!data || data.length === 0) {
     return (
       <Card>
@@ -28,14 +29,15 @@ export function GPATrendChart({ data }: GPATrendChartProps) {
   const chartData = data.map((item, index) => ({
     name: item.semesterName,
     GPA: item.gpa,
+    CGPA: cgpaData?.[index]?.cgpa ?? 0,
     index: index + 1,
   }))
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>GPA Trend</CardTitle>
-        <CardDescription>Your academic performance across semesters</CardDescription>
+        <CardTitle>GPA & CGPA Trend</CardTitle>
+        <CardDescription>Your academic performance and cumulative progress across semesters</CardDescription>
       </CardHeader>
       <CardContent>
         <ResponsiveContainer width="100%" height={300}>
@@ -70,7 +72,20 @@ export function GPATrendChart({ data }: GPATrendChartProps) {
               strokeWidth={2}
               dot={{ fill: 'hsl(var(--primary))', r: 4 }}
               activeDot={{ r: 6 }}
+              name="Semester GPA"
             />
+            {cgpaData && cgpaData.length > 0 && (
+              <Line
+                type="monotone"
+                dataKey="CGPA"
+                stroke="hsl(var(--success))"
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                dot={{ fill: 'hsl(var(--success))', r: 4 }}
+                activeDot={{ r: 6 }}
+                name="Cumulative CGPA"
+              />
+            )}
           </LineChart>
         </ResponsiveContainer>
       </CardContent>
