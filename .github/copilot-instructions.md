@@ -1497,6 +1497,26 @@ export function ClientWrapper({ data }) {
 
 ## UI/UX Enhancements
 
+### Layout Structure
+- **Fixed Sidebar Layout**: The sidebar remains fixed at full viewport height (`h-screen`) while the main content area scrolls independently
+- Dashboard layout uses `h-screen` with `overflow-hidden` to lock container to viewport height
+- Main content area has `overflow-y-auto` for independent scrolling
+- Sidebar has `overflow-y-auto` in case sidebar content exceeds viewport height
+- This prevents the sidebar from expanding based on content and provides a better user experience
+
+```typescript
+// Dashboard Layout Pattern
+<div className="flex h-screen overflow-hidden">
+  <Sidebar /> {/* Fixed, h-screen, overflow-y-auto */}
+  <div className="flex-1 flex flex-col overflow-hidden">
+    <Header />
+    <main className="flex-1 overflow-y-auto"> {/* Scrollable content */}
+      {children}
+    </main>
+  </div>
+</div>
+```
+
 ### Footer Attribution
 - Both Sidebar and homepage footer include "Made with ❤️ by ashwinsi" link
 - Uses Heart icon from Lucide (red and filled)
