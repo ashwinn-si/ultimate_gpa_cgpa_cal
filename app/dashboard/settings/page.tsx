@@ -17,7 +17,7 @@ export default async function SettingsPage() {
     <PageAnimationWrapper>
       {/* Enhanced Header with Gradient */}
       <AnimatedHeader>
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-purple-500/20 to-pink-500/20 border border-primary/20 p-8 shadow-lg">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-purple-500/20 to-pink-500/20 border border-primary/20 p-6 md:p-8 shadow-lg">
           <div className="relative z-10">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-primary/10 rounded-lg backdrop-blur-sm">

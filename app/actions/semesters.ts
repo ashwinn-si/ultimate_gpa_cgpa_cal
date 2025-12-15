@@ -12,7 +12,7 @@ export async function getSemesters() {
     .from('semesters')
     .select('*, subjects(*)')
     .order('year', { ascending: false })
-    .order('order', { ascending: true })
+    .order('order', { ascending: false })
 
   if (error) throw new Error(error.message)
 

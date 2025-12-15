@@ -13,7 +13,7 @@ export default async function SemestersPage() {
     <PageAnimationWrapper>
       {/* Enhanced Header with Gradient */}
       <AnimatedHeader>
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-blue-500/20 to-cyan-500/20 border border-primary/20 p-8 shadow-lg">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-blue-500/20 to-cyan-500/20 border border-primary/20 p-6 md:p-8 shadow-lg mb-2">
           <div className="relative z-10">
             <div className="flex items-start justify-between">
               <div>

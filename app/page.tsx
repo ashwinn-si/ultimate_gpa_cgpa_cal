@@ -263,7 +263,7 @@ export default function HomePage() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-sm hover:text-primary transition-colors"
             >
-              Made with <Heart className="h-4 w-4 text-red-500 fill-red-500" /> by ashwinsi
+              Made with <Heart className="h-4 w-4 text-red-500 fill-red-500" /> by Ashwin S I
             </a>
           </div>
         </div>
